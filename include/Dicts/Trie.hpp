@@ -133,9 +133,9 @@ static_assert(sizeof(TrieMap<true, int, int>) ==
 // extra space. E.g., `sizeof(utils::Optional<T*>) == sizeof(T*)`, as `nullptr`
 // indicates empty.
 template <class K, class V> struct InlineTrie {
-  InlineTrie<K, V> *children[4];
-  utils::Optional<K> keys[4];
-  V values[4];
+  InlineTrie<K, V> *children[4]{};
+  utils::Optional<K> keys[4]{};
+  V values[4]{};
 
   // Returns an optional pointer to the value.
   constexpr auto find(const K &k) -> utils::Optional<V &> {
