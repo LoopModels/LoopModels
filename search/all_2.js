@@ -2,7 +2,7 @@ var searchData=
 [
   ['cache_26',['Cache',['../classpoly_1_1IR_1_1Cache.html',1,'poly::IR']]],
   ['calcorthaxes_27',['calcOrthAxes',['../classpoly_1_1IR_1_1Addr.html#a40b1da00d77ef7a86abb6a3f5be9b36f',1,'poly::IR::Addr']]],
-  ['calcreorderability_28',['calcReorderability',['../classpoly_1_1poly_1_1Dependencies.html#a134162ae7e87f7c0ce8d233a9d24e996',1,'poly::poly::Dependencies']]],
+  ['calcreorderability_28',['calcReorderability',['../classpoly_1_1poly_1_1Dependencies.html#a793496055f051fb9995ff9a2e214c44a',1,'poly::poly::Dependencies']]],
   ['call_29',['Call',['../classpoly_1_1IR_1_1Call.html',1,'poly::IR']]],
   ['cflt_30',['Cflt',['../classpoly_1_1IR_1_1Cflt.html',1,'poly::IR']]],
   ['checksat_31',['checkSat',['../classpoly_1_1poly_1_1DepPoly.html#ac1f4cd56acb6036c53c98397ed1af8ba',1,'poly::poly::DepPoly']]],
