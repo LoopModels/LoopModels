@@ -2,9 +2,9 @@
 
 #include <Containers/TinyVector.hpp>
 #include <Math/Array.hpp>
+#include <Math/Dual.hpp>
 #include <Math/LinearAlgebra.hpp>
 #include <Math/Matrix.hpp>
-#include <Math/Dual.hpp>
 #include <Math/StaticArrays.hpp>
 #include <Utilities/Invariant.hpp>
 #include <algorithm>
@@ -14,7 +14,9 @@
 #include <cstdint>
 #include <random>
 
-using poly::math::Dual, poly::math::Vector, poly::containers::TinyVector, poly::math::SquareMatrix, poly::math::AbstractMatrix, poly::math::SquareDims, poly::math::I, poly::utils::eltype_t, poly::utils::invariant;
+using poly::math::Dual, poly::math::Vector, poly::containers::TinyVector,
+  poly::math::SquareMatrix, poly::math::AbstractMatrix, poly::math::SquareDims,
+  poly::math::I, poly::utils::eltype_t, poly::utils::invariant;
 
 // auto x = Dual<Dual<double, 4>, 2>{1.0};
 // auto y = x * 3.4;
@@ -22,11 +24,10 @@ using poly::math::Dual, poly::math::Vector, poly::containers::TinyVector, poly::
 static_assert(std::convertible_to<int, Dual<double, 4>>);
 static_assert(std::convertible_to<int, Dual<Dual<double, 4>, 2>>);
 
-template <class T> struct URand {
-};
+template <class T> struct URand {};
 
-template <class T, ptrdiff_t N> struct URand<Dual<T,N>> {
-  auto operator()(std::mt19937_64 &rng) -> Dual<T,N> {
+template <class T, ptrdiff_t N> struct URand<Dual<T, N>> {
+  auto operator()(std::mt19937_64 &rng) -> Dual<T, N> {
     Dual<T, N> x{URand<T>{}(rng)};
     for (size_t i = 0; i < N; ++i) x.gradient()[i] = URand<T>{}(rng);
     return x;

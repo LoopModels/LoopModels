@@ -1,7 +1,7 @@
 #pragma once
+#include <Alloc/Arena.hpp>
 #include <Dicts/BumpVector.hpp>
 #include <IR/Hash.hpp>
-#include <Alloc/Arena.hpp>
 #include <ankerl/unordered_dense.h>
 
 namespace poly::dict {

@@ -183,8 +183,7 @@ class TurboLoop {
     // we'd have to make sure none of the allocated instructions
     // can be referenced again (e.g., through the free list)
     // auto p = lalloc.checkpoint();
-    Valid<poly::Loop> AL =
-      poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);
+    Valid<poly::Loop> AL = poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);
     IR::TreeResult tr = parseExitBlocks(L);
     tr.rejectDepth = std::max(tr.rejectDepth, omega.size() - AL->getNumLoops());
     omega.push_back(0); // we start with 0 at the end, walking backwards

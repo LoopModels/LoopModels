@@ -1,7 +1,7 @@
 #pragma once
+#include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
 #include <Math/Indexing.hpp>
-#include <Alloc/Arena.hpp>
 #include <cstdint>
 
 // In include/Dicts, as it primarily serves to support amap/aset

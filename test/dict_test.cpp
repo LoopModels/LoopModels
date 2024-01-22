@@ -120,4 +120,3 @@ TEST(TrieTest, BasicAssertions) {
     EXPECT_EQ(*it.find(k), v);
   }
 }
-

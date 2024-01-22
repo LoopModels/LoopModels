@@ -7,8 +7,9 @@
 #include <cstdint>
 #include <llvm/ADT/SmallVector.h>
 
-using poly::math::Vector,poly::math::IntMatrix, poly::math::Row, poly::math::Col,
-  poly::math::DenseDims, poly::math::_, poly::utils::operator""_mat;
+using poly::math::Vector, poly::math::IntMatrix, poly::math::Row,
+  poly::math::Col, poly::math::DenseDims, poly::math::_,
+  poly::utils::operator""_mat;
 static void BM_NullSpace(benchmark::State &state) {
 
   IntMatrix<> B(poly::math::DenseDims{Row<>{6}, Col<>{3}});
@@ -85,10 +86,10 @@ static void BM_Bareiss2000(benchmark::State &state) {
     A[i, i - 1] = -1;
   }
   for (size_t j = 0; j < N; j += 8) {
-    A[j,_] << 0;
+    A[j, _] << 0;
     for (size_t i = 0; i < N; i += 7) {
       int64_t s = (i & 1) ? 1 : -1;
-      A[j,_] += s * A[i,_];
+      A[j, _] += s * A[i, _];
     }
   }
   // std::cout << A << std::endl;

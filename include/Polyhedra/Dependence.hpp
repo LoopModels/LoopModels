@@ -1243,9 +1243,9 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
     return false;
   // no inner dependence
   PtrMatrix<int64_t> inInd = in->indexMatrix(), outInd = out->indexMatrix();
-  invariant(inInd.numRow(),outInd.numRow());
+  invariant(inInd.numRow(), outInd.numRow());
   ptrdiff_t d = L->getCurrentDepth();
-  invariant(inInd.numRow()>= d);
+  invariant(inInd.numRow() >= d);
   // if (ind
   return true;
 }

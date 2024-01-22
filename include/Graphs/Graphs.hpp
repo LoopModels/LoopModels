@@ -1,6 +1,6 @@
 #pragma once
-#include <Math/Array.hpp>
 #include <Alloc/Arena.hpp>
+#include <Math/Array.hpp>
 namespace poly::graph {
 
 // Currently, only implements top sort, and Tarjan's strongly connected

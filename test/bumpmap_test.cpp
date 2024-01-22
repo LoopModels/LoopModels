@@ -16,8 +16,9 @@
 TEST(BumpDownMapTest, BasicAssertions) {
   using M = poly::dict::amap<uint64_t, uint64_t>;
   static_assert(
-    std::same_as<M::value_container_type,
-                 poly::math::BumpPtrVector<containers::Pair<uint64_t, uint64_t>>>);
+    std::same_as<
+      M::value_container_type,
+      poly::math::BumpPtrVector<containers::Pair<uint64_t, uint64_t>>>);
   static_assert(
     std::same_as<
       M::allocator_type,
