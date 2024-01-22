@@ -31,9 +31,9 @@ struct Dependence {
   };
   enum MetaFlags : uint8_t {
     Forward = 1,
-    Reassociable = 2,
-    FreeOfDeeperDeps = 4,
-    Peelable = 8
+    FreeOfDeeperDeps = 2,
+    Reassociable = 4,
+    NotReassociable = 8
   };
 
   // private:
@@ -55,6 +55,7 @@ struct Dependence {
   ID revTimeEdge_{-1};
   std::array<uint8_t, 2> satLvl;
   uint8_t meta{0};
+  uint8_t peel{255}; // sentinal value for cannot peel
 
   // template <size_t I> [[nodiscard]] auto get() const -> const auto & {
   //   if constexpr (I == 0) return depPoly;
@@ -66,6 +67,7 @@ struct Dependence {
     return {dependenceSatisfaction, dependenceBounding};
   }
   [[nodiscard]] constexpr auto getMeta() const -> uint8_t { return meta; }
+  [[nodiscard]] constexpr auto getPeel() const -> uint8_t { return peel; }
 
   // public:
   friend class Dependencies;
@@ -84,6 +86,7 @@ struct Dependence {
   [[nodiscard]] constexpr auto revTimeEdge() const -> ID {
     return revTimeEdge_;
   }
+  [[nodiscard]] constexpr auto peelable() const -> bool { return peel != 255; }
   // constexpr auto setNextInput(Dependence *n) -> Dependence * {
   //   return nextInput = n;
   // }
@@ -561,10 +564,11 @@ static_assert(sizeof(Dependence) <= 64);
 // i_0 = i_1
 // j_0 = j_1 - k_1
 class Dependencies {
-  using Tuple = containers::Tuple<IR::Addr *, IR::Addr *,
-                                  std::array<Valid<math::Simplex>, 2>,
-                                  DepPoly *, int32_t, int32_t, int32_t, int32_t,
-                                  int32_t, std::array<uint8_t, 2>, uint8_t>;
+  using Tuple =
+    containers::Tuple<IR::Addr *, IR::Addr *,
+                      std::array<Valid<math::Simplex>, 2>, DepPoly *, int32_t,
+                      int32_t, int32_t, int32_t, int32_t,
+                      std::array<uint8_t, 2>, uint8_t, uint8_t>;
 
   math::ManagedSOA<Tuple> datadeps;
 
@@ -579,6 +583,7 @@ class Dependencies {
   static constexpr size_t RevTimeEdgeI = 8;
   static constexpr size_t SatLevelI = 9;
   static constexpr size_t GetMetaI = 10;
+  static constexpr size_t GetPeelI = 11;
 
 public:
   using ID = Dependence::ID;
@@ -610,7 +615,8 @@ public:
                  -1,
                  d.revTimeEdge().id,
                  d.satLvl,
-                 d.getMeta()};
+                 d.getMeta(),
+                 d.getPeel()};
   }
 
 private:
@@ -890,6 +896,40 @@ private:
       return (a->getLoop() != L) && L->contains(a);
     });
   }
+  static auto innermostNonZero(PtrMatrix<int64_t> A, ptrdiff_t skip)
+    -> ptrdiff_t {
+    for (ptrdiff_t i = ptrdiff_t(A.numCol()); --i;) {
+      if (i == skip) continue;
+      if (!math::allZero(A[_, i])) return i;
+    }
+    return -1;
+  }
+  /*
+   * Check `findThroughReassociable` and its uses; we should be able to use that
+  here.
+  enum OperationChainReassociability { NoPath, ReassociablePath,
+    NonReassociablePath
+  };
+  static auto checkPathReassociability {
+
+  }
+  */
+  // For this to be reassociable, we must have a chain of reassociable
+  // operations from `in->out`. Additionally, it is strogly recommended to check
+  // if `revTimeEdge(id) >= 0` prior to calling this, as it is only meaningful
+  // when true.
+  // Must also check that `in->isLoad() != out->isLoad()`.
+  // We may have either that `in -> out` (forward time), or `out -> in` (reverse
+  // time) but we still need to check both cases to mark as reassociable.
+  // TODO: add a not reassociable, check if already defined
+  // after determining, store result in entire cycle
+  static auto canReassociate(IR::Addr *in, IR::Addr *out) -> bool {
+    invariant(in->isLoad() != out->isLoad());
+    if (in->indexMatrix() != out->indexMatrix()) return false;
+    IR::Addr *load = in->isLoad() ? in : out, *store = in->isLoad() ? out : in;
+    // do we have a reassociable chain of operations from `load` to `store`?
+    return false;
+  }
 
 public:
   constexpr void removeEdge(ID id) {
@@ -1006,8 +1046,14 @@ public:
   [[nodiscard]] constexpr auto getMeta(ID i) const noexcept -> uint8_t {
     return datadeps.template get<GetMetaI>(i.id);
   }
+  [[nodiscard]] constexpr auto getPeel(ID i) noexcept -> uint8_t & {
+    return datadeps.template get<GetPeelI>(i.id);
+  }
+  [[nodiscard]] constexpr auto getPeel(ID i) const noexcept -> uint8_t {
+    return datadeps.template get<GetPeelI>(i.id);
+  }
   [[nodiscard]] constexpr auto isForward(ID i) const noexcept -> bool {
-    return getMeta(i);
+    return getMeta(i) & 1;
   }
 
   class Ref {
@@ -1224,7 +1270,8 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
 }
 
 inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
-  IR::Addr *in = input(Dependence::ID{id}), *out = output(Dependence::ID{id});
+  auto id_ = Dependence::ID{id};
+  IR::Addr *in = input(id_), *out = output(id_);
   // clang-format off
   // If we have a dependency nested inside `L`, we won't be able to reorder if either
   // a) that dependency's output is `in`
@@ -1246,8 +1293,43 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
   invariant(inInd.numRow(), outInd.numRow());
   ptrdiff_t d = L->getCurrentDepth();
   invariant(inInd.numRow() >= d);
-  // if (ind
-  return true;
+  bool peelable = false, reassociable = false;
+  if (math::allZero(inInd[_, d])) {
+    if (!math::allZero(outInd[_, d])) {
+      // now, we want to find a loop that `in` depends on but `out` does not
+      // so that we can split over this loop.
+      // For now, to simplify codegen, we only accept the innermost non-zero
+      if (ptrdiff_t i = innermostNonZero(inInd, d); i >= 0) {
+        getPeel(id_) = i;
+        peelable = true;
+      }
+    }
+  } else if (math::allZero(outInd[_, d])) {
+    if (!math::allZero(inInd[_, d])) {
+      if (ptrdiff_t i = innermostNonZero(outInd, d); i >= 0) {
+        getPeel(id_) = i;
+        peelable = true;
+      }
+    }
+  }
+  int32_t rte = revTimeEdge(id_);
+  if ((rte >= 0) && (in->isLoad() != out->isLoad()) &&
+      (!(getMeta(id_) & Dependence::NotReassociable)) &&
+      canReassociate(in, out)) {
+    reassociable = true;
+    getMeta(id_) = getMeta(id_) | Dependence::Reassociable;
+  } else {
+    getMeta(id_) = getMeta(id_) | Dependence::NotReassociable;
+    // set all in cycle to `NotReassociable`, so we don't recalc
+    if (rte >= 0) {
+      for (int32_t stop = id; rte != stop;) {
+        auto rtid = Dependence::ID{rte};
+        getMeta(rtid) = getMeta(rtid) | Dependence::NotReassociable;
+        rte = revTimeEdge(rtid);
+      }
+    }
+  }
+  return peelable || reassociable;
 }
 } // namespace poly
 
