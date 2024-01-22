@@ -314,8 +314,10 @@ public:
   [[nodiscard]] inline auto outputEdges(const Dependencies &) const;
   [[nodiscard]] inline auto inputEdges(const Dependencies &, int depth) const;
   [[nodiscard]] inline auto outputEdges(const Dependencies &, int depth) const;
-  [[nodiscard]] inline auto inputEdgeIDs(const Dependencies &) const;
-  [[nodiscard]] inline auto outputEdgeIDs(const Dependencies &) const;
+  [[nodiscard]] inline auto inputEdgeIDs(const Dependencies &) const
+    -> utils::VForwardRange;
+  [[nodiscard]] inline auto outputEdgeIDs(const Dependencies &) const
+    -> utils::VForwardRange;
   [[nodiscard]] inline auto inputEdgeIDs(const Dependencies &, int depth) const;
   [[nodiscard]] inline auto outputEdgeIDs(const Dependencies &,
                                           int depth) const;

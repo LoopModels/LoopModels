@@ -875,6 +875,21 @@ private:
 
     };
   }
+  inline auto anyInteriorDependents(IR::Loop *L, IR::Addr *out) -> bool {
+    return std::ranges::any_of(out->outputEdgeIDs(*this),
+                               [&](int32_t i) -> bool {
+                                 IR::Addr *a = output(Dependence::ID{i});
+                                 return (a->getLoop() != L) && L->contains(a);
+                               });
+  }
+
+  inline auto anyInteriorDependencies(IR::Loop *L, IR::Addr *in) -> bool {
+
+    return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) -> bool {
+      IR::Addr *a = input(Dependence::ID{i});
+      return (a->getLoop() != L) && L->contains(a);
+    });
+  }
 
 public:
   constexpr void removeEdge(ID id) {
@@ -1102,7 +1117,7 @@ public:
   /// NOTE: this method uses `in` and `out` to check for reorderability, as
   /// these get rotated after the simplex solve, while the stored `DepPoly` and
   /// simplices do not.
-  inline void calcReorderability(IR::Loop *, int32_t);
+  inline auto calcReorderability(IR::Loop *, int32_t) -> bool;
 };
 
 } // namespace poly
@@ -1115,10 +1130,12 @@ inline auto Addr::inputEdges(const Dependencies &deps) const {
 inline auto Addr::outputEdges(const Dependencies &deps) const {
   return deps.outputEdges(getEdgeOut());
 }
-inline auto Addr::inputEdgeIDs(const Dependencies &deps) const {
+inline auto Addr::inputEdgeIDs(const Dependencies &deps) const
+  -> utils::VForwardRange {
   return deps.inputEdgeIDs(getEdgeIn());
 }
-inline auto Addr::outputEdgeIDs(const Dependencies &deps) const {
+inline auto Addr::outputEdgeIDs(const Dependencies &deps) const
+  -> utils::VForwardRange {
   return deps.outputEdgeIDs(getEdgeOut());
 }
 inline auto Addr::inputEdgeIDs(const Dependencies &deps, int depth) const {
@@ -1206,7 +1223,7 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
   }
 }
 
-inline void Dependencies::calcReorderability(IR::Loop *L, int32_t id) {
+inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
   IR::Addr *in = input(Dependence::ID{id}), *out = output(Dependence::ID{id});
   // clang-format off
   // If we have a dependency nested inside `L`, we won't be able to reorder if either
@@ -1222,16 +1239,15 @@ inline void Dependencies::calcReorderability(IR::Loop *L, int32_t id) {
   // 2. Is this dependency reassociable? E.g., if it's connected by reassociable adds
   //   (such as integer adds, or floating point with the reassociable FMF), then mark it as such.
   // clang-format on
-  bool inDepends =
-    std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) -> bool {
-      IR::Addr *a = input(Dependence::ID{i});
-      return (a->getLoop() != L) && L->contains(a);
-    });
-  bool outDepended =
-    std::ranges::any_of(out->outputEdgeIDs(*this), [&](int32_t i) -> bool {
-      IR::Addr *a = output(Dependence::ID{i});
-      return (a->getLoop() != L) && L->contains(a);
-    });
+  if (anyInteriorDependencies(L, in) || anyInteriorDependents(L, out))
+    return false;
+  // no inner dependence
+  PtrMatrix<int64_t> inInd = in->indexMatrix(), outInd = out->indexMatrix();
+  invariant(inInd.numRow(),outInd.numRow());
+  ptrdiff_t d = L->getCurrentDepth();
+  invariant(inInd.numRow()>= d);
+  // if (ind
+  return true;
 }
 } // namespace poly
 
