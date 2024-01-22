@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['selectcost_372',['selectCost',['../classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de',1,'poly::IR::Operation']]],
-  ['setfusionomega_373',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
-  ['setsatlevellp_374',['setSatLevelLP',['../structpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00',1,'poly::poly::Dependence']]],
-  ['stashedpreventsreordering_375',['stashedPreventsReordering',['../structpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955',1,'poly::poly::Dependence']]]
+  ['selectcost_373',['selectCost',['../classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de',1,'poly::IR::Operation']]],
+  ['setfusionomega_374',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
+  ['setsatlevellp_375',['setSatLevelLP',['../structpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00',1,'poly::poly::Dependence']]],
+  ['stashedpreventsreordering_376',['stashedPreventsReordering',['../structpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955',1,'poly::poly::Dependence']]]
 ];

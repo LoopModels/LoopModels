@@ -88,9 +88,9 @@ Classes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
 Public Types</h2></td></tr>
 <tr class="memitem:a6c8bdd28c77afe41e48af5dc2f52c69b"><td class="memItemLeft" align="right" valign="top"><a id="a6c8bdd28c77afe41e48af5dc2f52c69b"></a>enum &#160;</td><td class="memItemRight" valign="bottom"><b>MetaFlags</b> : uint8_t { <b>Forward</b> = 1
-, <b>Reassociable</b> = 2
-, <b>FreeOfDeeperDeps</b> = 4
-, <b>Peelable</b> = 8
+, <b>FreeOfDeeperDeps</b> = 2
+, <b>Reassociable</b> = 4
+, <b>NotReassociable</b> = 8
  }</td></tr>
 <tr class="separator:a6c8bdd28c77afe41e48af5dc2f52c69b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -102,6 +102,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSimplexP
 <tr class="memitem:a46aefd777a226906c791de5fc73e660a"><td class="memItemLeft" align="right" valign="top"><a id="a46aefd777a226906c791de5fc73e660a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMeta</b> () const -&gt; uint8_t</td></tr>
 <tr class="separator:a46aefd777a226906c791de5fc73e660a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aef33e03a945de880c3fdf8764974056b"><td class="memItemLeft" align="right" valign="top"><a id="aef33e03a945de880c3fdf8764974056b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPeel</b> () const -&gt; uint8_t</td></tr>
+<tr class="separator:aef33e03a945de880c3fdf8764974056b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7cc872d607b57d62206977b623a336b"><td class="memItemLeft" align="right" valign="top"><a id="af7cc872d607b57d62206977b623a336b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> () const -&gt; Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
 <tr class="separator:af7cc872d607b57d62206977b623a336b"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -111,6 +114,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> 
 <tr class="memitem:a05867d8c1f3003e22b5f3969859b7405"><td class="memItemLeft" align="right" valign="top"><a id="a05867d8c1f3003e22b5f3969859b7405"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>revTimeEdge</b> () const -&gt; <a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a></td></tr>
 <tr class="separator:a05867d8c1f3003e22b5f3969859b7405"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29ca251c461a6403445088abd7f8ea40"><td class="memItemLeft" align="right" valign="top"><a id="a29ca251c461a6403445088abd7f8ea40"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>peelable</b> () const -&gt; bool</td></tr>
+<tr class="separator:a29ca251c461a6403445088abd7f8ea40"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad61450183ac23f948dd96d0b8090bc00"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00">setSatLevelLP</a> (uint8_t d)</td></tr>
 <tr class="separator:ad61450183ac23f948dd96d0b8090bc00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c125a1d6aa911656389bf6c9bc25a52"><td class="memItemLeft" align="right" valign="top"><a id="a3c125a1d6aa911656389bf6c9bc25a52"></a>
@@ -326,6 +332,9 @@ std::array&lt; uint8_t, 2 &gt;&#160;</td><td class="memItemRight" valign="bottom
 <tr class="memitem:a8799381f1002f3e022e98b17bf14da9c"><td class="memItemLeft" align="right" valign="top"><a id="a8799381f1002f3e022e98b17bf14da9c"></a>
 uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>meta</b> {0}</td></tr>
 <tr class="separator:a8799381f1002f3e022e98b17bf14da9c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b90b05339177defa1a142eb931516f8"><td class="memItemLeft" align="right" valign="top"><a id="a9b90b05339177defa1a142eb931516f8"></a>
+uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>peel</b> {255}</td></tr>
+<tr class="separator:a9b90b05339177defa1a142eb931516f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
