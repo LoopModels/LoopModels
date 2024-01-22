@@ -229,169 +229,168 @@ $(function() {
 <div class="line"><a name="l00183"></a><span class="lineno">  183</span>&#160;    <span class="comment">// we&#39;d have to make sure none of the allocated instructions</span></div>
 <div class="line"><a name="l00184"></a><span class="lineno">  184</span>&#160;    <span class="comment">// can be referenced again (e.g., through the free list)</span></div>
 <div class="line"><a name="l00185"></a><span class="lineno">  185</span>&#160;    <span class="comment">// auto p = lalloc.checkpoint();</span></div>
-<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    Valid&lt;poly::Loop&gt; AL =</div>
-<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;      poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);</div>
-<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = parseExitBlocks(L);</div>
-<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    tr.rejectDepth = std::max(tr.rejectDepth, omega.size() - AL-&gt;getNumLoops());</div>
-<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    omega.push_back(0); <span class="comment">// we start with 0 at the end, walking backwards</span></div>
-<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    tr = parseBlocks(L-&gt;getHeader(), L-&gt;getLoopLatch(), L, omega, AL, tr);</div>
-<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    omega.pop_back();</div>
-<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    <span class="keywordflow">if</span> (tr.accept(omega.size() - 1)) <span class="keywordflow">return</span> tr;</div>
-<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    salloc-&gt;reset();</div>
-<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="comment">// lalloc.rollback(p);</span></div>
-<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;    <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00197"></a><span class="lineno">  197</span>&#160;  }</div>
-<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;  <span class="keyword">auto</span> parseExitBlocks(llvm::Loop *L) -&gt; <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> {</div>
-<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr;</div>
-<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;P : L-&gt;getExitBlock()-&gt;phis()) {</div>
-<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> i = 0, N = P.getNumIncomingValues(); i &lt; N; ++i) {</div>
-<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        <span class="keyword">auto</span> *J = llvm::dyn_cast&lt;llvm::Instruction&gt;(P.getIncomingValue(i));</div>
-<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;        <span class="keywordflow">if</span> (!J || !L-&gt;contains(J)) <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;        tr = instructions.<a class="code" href="classpoly_1_1IR_1_1Cache.html#a94b8346dba5031648a989204bd24937c">getValue</a>(J, <span class="keyword">nullptr</span>, tr).second;</div>
-<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;      }</div>
-<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    }</div>
-<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;    <span class="keywordflow">return</span> tr;</div>
-<div class="line"><a name="l00218"></a><span class="lineno">  218</span>&#160;  }</div>
-<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
-<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;  <span class="keyword">auto</span> runOnLoop(llvm::Loop *L, llvm::ArrayRef&lt;llvm::Loop *&gt; subLoops,</div>
-<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;                 math::Vector&lt;int, 8&gt; &amp;omega, <a class="code" href="structpoly_1_1poly_1_1NoWrapRewriter.html">poly::NoWrapRewriter</a> &amp;nwr)</div>
-<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> {</div>
-<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="keywordtype">unsigned</span> numSubLoops = subLoops.size();</div>
-<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="comment">// This is a special case, as it is when we build poly::Loop</span></div>
-<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keywordflow">if</span> (!numSubLoops) <span class="keywordflow">return</span> initLoopTree(L, omega, nwr);</div>
-<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordtype">unsigned</span> depth = omega.size();</div>
-<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <span class="keywordtype">bool</span> failed = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = parseExitBlocks(L);</div>
-<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    omega.push_back(0); <span class="comment">// we start with 0 at the end, walking backwards</span></div>
-<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *AL = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    llvm::BasicBlock *E = L-&gt;getLoopLatch();</div>
-<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numSubLoops; i--; --omega.back()) {</div>
-<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;      llvm::Loop *subLoop = subLoops[i];</div>
-<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      <span class="comment">// we need to parse backwards, so we first evaluate</span></div>
-<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <span class="comment">// TODO: support having multiple exit blocks?</span></div>
-<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;      <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> trec =</div>
-<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160;        runOnLoop(subLoop, subLoop-&gt;getSubLoops(), omega, nwr);</div>
-<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160; </div>
-<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;      <span class="keywordflow">if</span> (trec.accept(depth)) {</div>
-<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <span class="keywordflow">if</span> (!AL) AL = trec.getLoop();</div>
-<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;        <span class="keywordflow">if</span> (AL) {</div>
-<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;          <span class="comment">// recursion succeeded; see if we can connect the path</span></div>
-<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;          llvm::BasicBlock *subLoopExit = subLoop-&gt;getExitBlock();</div>
-<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;          <span class="comment">// for fusion, we need to build a path from subLoopExit to E</span></div>
-<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;          <span class="comment">// where E is the preheader of the preceding loopnest</span></div>
-<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;          <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> trblock =</div>
-<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;            parseBlocks(subLoopExit, E, L, omega, AL, tr);</div>
-<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;          <span class="keywordflow">if</span> (trblock.accept(depth)) {</div>
-<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;            tr = trblock;</div>
-<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;            tr *= trec;</div>
-<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;          } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;            failed = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;            <span class="keywordflow">if</span> (tr.accept(depth)) optimize(tr);</div>
-<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;            <span class="comment">// we start now with trec</span></div>
-<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;            tr = trec;</div>
-<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;          }</div>
-<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;          E = subLoop-&gt;getLoopPreheader(); <span class="comment">// want to draw a path from trec</span></div>
-<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;          <span class="keywordflow">continue</span>;</div>
-<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;        }</div>
-<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;      }</div>
-<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;      <span class="comment">// we reject, because we failed to build a trec with a LoopNest</span></div>
-<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;      failed = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;      optimize(tr);</div>
-<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;      tr = {};</div>
-<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;      <span class="comment">// we don&#39;t need to draw a path from anything, so only exit needed</span></div>
-<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;      <span class="keywordflow">if</span> (i) E = subLoops[i - 1]-&gt;getExitBlock();</div>
-<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    }</div>
-<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;    <span class="keywordflow">if</span> (failed) {</div>
-<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;      <span class="keywordflow">if</span> (tr.accept(depth)) optimize(tr);</div>
-<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;      omega.pop_back();</div>
-<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;      <span class="keywordflow">return</span> {};</div>
-<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    }</div>
-<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <span class="comment">// now we try to go from E to H</span></div>
-<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> trblock = parseBlocks(L-&gt;getHeader(), E, L, omega, AL, tr);</div>
-<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;    <span class="keywordflow">if</span> (trblock.reject(depth)) {</div>
-<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;      optimize(tr); <span class="comment">// optimize old tr</span></div>
-<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;      tr = {};</div>
-<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    } <span class="keywordflow">else</span> tr = trblock;</div>
-<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    omega.pop_back();</div>
-<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;    <span class="keywordflow">return</span> tr;</div>
-<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160;  }</div>
-<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160; </div>
-<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;  <span class="keywordtype">void</span> optimize(<a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr) {</div>
-<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <span class="comment">// now we build the LinearProgram</span></div>
-<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;    <a class="code" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> lpor =</div>
-<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;      loopBlock.optimize(instructions, tr);</div>
-<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    <span class="keywordflow">if</span> (!lpor.nodes) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *addr : lpor.addr.getAddr())</div>
-<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;      loopBBs.insert(addr-&gt;getBasicBlock());</div>
-<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;    CostModeling::optimize(loopBlock.getDependencies(), instructions, loopBBs,</div>
-<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;                           eraseCandidates, loopBlock.getAllocator(), lpor);</div>
-<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;    loopBBs.clear();</div>
-<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  }</div>
-<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;  <span class="comment">/*</span></div>
-<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="comment">    auto isLoopPreHeader(const llvm::BasicBlock *BB) const -&gt; bool {</span></div>
-<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="comment">      if (const llvm::Instruction *term = BB-&gt;getTerminator())</span></div>
-<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;<span class="comment">        if (const auto *BI = llvm::dyn_cast&lt;llvm::BranchInst&gt;(term))</span></div>
-<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;<span class="comment">          if (!BI-&gt;isConditional()) return</span></div>
-<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="comment">  LI-&gt;isLoopHeader(BI-&gt;getSuccessor(0)); return false;</span></div>
-<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="comment">    }</span></div>
-<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="comment">    inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)</span></div>
-<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="comment">      -&gt; bool {</span></div>
-<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="comment">      return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {</span></div>
-<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="comment">        if (const auto *r = llvm::dyn_cast&lt;llvm::SCEVAddRecExpr&gt;(S))</span></div>
-<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="comment">          if (r-&gt;getLoop()-&gt;getLoopDepth() &lt;= numPeeled) return true;</span></div>
-<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;<span class="comment">        return false;</span></div>
-<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="comment">      });</span></div>
-<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<span class="comment">  }</span></div>
-<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;<span class="comment">    */</span></div>
-<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <span class="comment">// https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932</span></div>
-<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;  <span class="keywordtype">void</span> remark(<span class="keyword">const</span> llvm::StringRef remarkName, llvm::Loop *L,</div>
-<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;              <span class="keyword">const</span> llvm::StringRef remarkMessage,</div>
-<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160;              llvm::Instruction *J = <span class="keyword">nullptr</span>)<span class="keyword"> const </span>{</div>
-<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160; </div>
-<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};</div>
-<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;    ORE-&gt;emit(analysis &lt;&lt; remarkMessage);</div>
-<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  }</div>
-<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="comment">// void buildInstructionGraph(LoopTree &amp;root) {</span></div>
-<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="comment">//     // predicates</span></div>
-<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="comment">// ~TurboLoopPass() {</span></div>
-<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="comment">//   for (auto l : loopForests) l-&gt;~LoopTree();</span></div>
-<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;  <span class="comment">// }</span></div>
-<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;<span class="keyword">public</span>:</div>
-<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;  <a class="code" href="classpoly_1_1TurboLoop.html">TurboLoop</a>(llvm::Function &amp;F, llvm::FunctionAnalysisManager &amp;FAM)</div>
-<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;    : TLI{&amp;FAM.getResult&lt;llvm::TargetLibraryAnalysis&gt;(F)},</div>
-<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;      TTI{&amp;FAM.getResult&lt;llvm::TargetIRAnalysis&gt;(F)},</div>
-<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;      LI{&amp;FAM.getResult&lt;llvm::LoopAnalysis&gt;(F)},</div>
-<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;      SE{&amp;FAM.getResult&lt;llvm::ScalarEvolutionAnalysis&gt;(F)},</div>
-<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;      ORE{&amp;FAM.getResult&lt;llvm::OptimizationRemarkEmitterAnalysis&gt;(F)},</div>
-<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;      registers{F.getContext(), *TTI} {}</div>
-<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// llvm::LoopNest LA = FAM.getResult&lt;llvm::LoopNestAnalysis&gt;(F);</span></div>
-<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="comment">// llvm::AssumptionCache &amp;AC = FAM.getResult&lt;llvm::AssumptionAnalysis&gt;(F);</span></div>
-<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="comment">// llvm::DominatorTree &amp;DT = FAM.getResult&lt;llvm::DominatorTreeAnalysis&gt;(F);</span></div>
-<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="comment">// TLI = &amp;FAM.getResult&lt;llvm::TargetLibraryAnalysis&gt;(F);</span></div>
-<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160;  <span class="keyword">auto</span> run() {</div>
-<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160; </div>
-<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">if</span> (!ORE-&gt;enabled()) ORE = <span class="keyword">nullptr</span>; <span class="comment">// cheaper check</span></div>
-<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;    <span class="keywordflow">if</span> (ORE) {</div>
-<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;      <span class="comment">// llvm::OptimizationRemarkAnalysis</span></div>
-<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;      <span class="comment">// analysis{remarkAnalysis(&quot;RegisterCount&quot;, *LI-&gt;begin())};</span></div>
-<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;      <span class="comment">// ORE-&gt;emit(analysis &lt;&lt; &quot;There are</span></div>
-<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;      <span class="comment">// &quot;&lt;&lt;TTI-&gt;getNumberOfRegisters(0)&lt;&lt;&quot; scalar registers&quot;);</span></div>
-<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;      llvm::SmallString&lt;32&gt; str = llvm::formatv(</div>
-<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;        <span class="stringliteral">&quot;there are {0} scalar registers&quot;</span>, TTI-&gt;getNumberOfRegisters(0));</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160; </div>
-<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;      remark(<span class="stringliteral">&quot;ScalarRegisterCount&quot;</span>, *LI-&gt;begin(), str);</div>
-<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;      str = llvm::formatv(<span class="stringliteral">&quot;there are {0} vector registers&quot;</span>,</div>
-<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;                          registers.getNumVectorBits());</div>
-<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;      remark(<span class="stringliteral">&quot;VectorRegisterCount&quot;</span>, *LI-&gt;begin(), str);</div>
-<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    }</div>
-<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    <span class="comment">// Builds the loopForest, constructing predicate chains and loop nests</span></div>
-<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = initializeLoopForest();</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    <span class="keywordflow">if</span> (tr.accept(0)) optimize(tr);</div>
-<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keywordflow">return</span> llvm::PreservedAnalyses::none();</div>
-<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;  }</div>
-<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;};</div>
-<div class="line"><a name="l00409"></a><span class="lineno">  409</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l00186"></a><span class="lineno">  186</span>&#160;    Valid&lt;poly::Loop&gt; AL = poly::Loop::construct(lalloc, L, nwr.visit(BT), *SE);</div>
+<div class="line"><a name="l00187"></a><span class="lineno">  187</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = parseExitBlocks(L);</div>
+<div class="line"><a name="l00188"></a><span class="lineno">  188</span>&#160;    tr.rejectDepth = std::max(tr.rejectDepth, omega.size() - AL-&gt;getNumLoops());</div>
+<div class="line"><a name="l00189"></a><span class="lineno">  189</span>&#160;    omega.push_back(0); <span class="comment">// we start with 0 at the end, walking backwards</span></div>
+<div class="line"><a name="l00190"></a><span class="lineno">  190</span>&#160;    tr = parseBlocks(L-&gt;getHeader(), L-&gt;getLoopLatch(), L, omega, AL, tr);</div>
+<div class="line"><a name="l00191"></a><span class="lineno">  191</span>&#160;    omega.pop_back();</div>
+<div class="line"><a name="l00192"></a><span class="lineno">  192</span>&#160;    <span class="keywordflow">if</span> (tr.accept(omega.size() - 1)) <span class="keywordflow">return</span> tr;</div>
+<div class="line"><a name="l00193"></a><span class="lineno">  193</span>&#160;    salloc-&gt;reset();</div>
+<div class="line"><a name="l00194"></a><span class="lineno">  194</span>&#160;    <span class="comment">// lalloc.rollback(p);</span></div>
+<div class="line"><a name="l00195"></a><span class="lineno">  195</span>&#160;    <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00196"></a><span class="lineno">  196</span>&#160;  }</div>
+<div class="line"><a name="l00207"></a><span class="lineno">  207</span>&#160;  <span class="keyword">auto</span> parseExitBlocks(llvm::Loop *L) -&gt; <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> {</div>
+<div class="line"><a name="l00208"></a><span class="lineno">  208</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr;</div>
+<div class="line"><a name="l00209"></a><span class="lineno">  209</span>&#160;    <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;P : L-&gt;getExitBlock()-&gt;phis()) {</div>
+<div class="line"><a name="l00210"></a><span class="lineno">  210</span>&#160;      <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> i = 0, N = P.getNumIncomingValues(); i &lt; N; ++i) {</div>
+<div class="line"><a name="l00211"></a><span class="lineno">  211</span>&#160;        <span class="keyword">auto</span> *J = llvm::dyn_cast&lt;llvm::Instruction&gt;(P.getIncomingValue(i));</div>
+<div class="line"><a name="l00212"></a><span class="lineno">  212</span>&#160;        <span class="keywordflow">if</span> (!J || !L-&gt;contains(J)) <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00213"></a><span class="lineno">  213</span>&#160;        tr = instructions.<a class="code" href="classpoly_1_1IR_1_1Cache.html#a94b8346dba5031648a989204bd24937c">getValue</a>(J, <span class="keyword">nullptr</span>, tr).second;</div>
+<div class="line"><a name="l00214"></a><span class="lineno">  214</span>&#160;      }</div>
+<div class="line"><a name="l00215"></a><span class="lineno">  215</span>&#160;    }</div>
+<div class="line"><a name="l00216"></a><span class="lineno">  216</span>&#160;    <span class="keywordflow">return</span> tr;</div>
+<div class="line"><a name="l00217"></a><span class="lineno">  217</span>&#160;  }</div>
+<div class="line"><a name="l00269"></a><span class="lineno">  269</span>&#160;  <span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
+<div class="line"><a name="l00270"></a><span class="lineno">  270</span>&#160;  <span class="keyword">auto</span> runOnLoop(llvm::Loop *L, llvm::ArrayRef&lt;llvm::Loop *&gt; subLoops,</div>
+<div class="line"><a name="l00271"></a><span class="lineno">  271</span>&#160;                 math::Vector&lt;int, 8&gt; &amp;omega, <a class="code" href="structpoly_1_1poly_1_1NoWrapRewriter.html">poly::NoWrapRewriter</a> &amp;nwr)</div>
+<div class="line"><a name="l00272"></a><span class="lineno">  272</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> {</div>
+<div class="line"><a name="l00273"></a><span class="lineno">  273</span>&#160;    <span class="keywordtype">unsigned</span> numSubLoops = subLoops.size();</div>
+<div class="line"><a name="l00274"></a><span class="lineno">  274</span>&#160;    <span class="comment">// This is a special case, as it is when we build poly::Loop</span></div>
+<div class="line"><a name="l00275"></a><span class="lineno">  275</span>&#160;    <span class="keywordflow">if</span> (!numSubLoops) <span class="keywordflow">return</span> initLoopTree(L, omega, nwr);</div>
+<div class="line"><a name="l00276"></a><span class="lineno">  276</span>&#160;    <span class="keywordtype">unsigned</span> depth = omega.size();</div>
+<div class="line"><a name="l00277"></a><span class="lineno">  277</span>&#160;    <span class="keywordtype">bool</span> failed = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l00278"></a><span class="lineno">  278</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = parseExitBlocks(L);</div>
+<div class="line"><a name="l00279"></a><span class="lineno">  279</span>&#160;    omega.push_back(0); <span class="comment">// we start with 0 at the end, walking backwards</span></div>
+<div class="line"><a name="l00280"></a><span class="lineno">  280</span>&#160;    <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *AL = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a name="l00281"></a><span class="lineno">  281</span>&#160;    llvm::BasicBlock *E = L-&gt;getLoopLatch();</div>
+<div class="line"><a name="l00282"></a><span class="lineno">  282</span>&#160;    <span class="keywordflow">for</span> (<span class="keywordtype">size_t</span> i = numSubLoops; i--; --omega.back()) {</div>
+<div class="line"><a name="l00283"></a><span class="lineno">  283</span>&#160;      llvm::Loop *subLoop = subLoops[i];</div>
+<div class="line"><a name="l00284"></a><span class="lineno">  284</span>&#160;      <span class="comment">// we need to parse backwards, so we first evaluate</span></div>
+<div class="line"><a name="l00285"></a><span class="lineno">  285</span>&#160;      <span class="comment">// TODO: support having multiple exit blocks?</span></div>
+<div class="line"><a name="l00286"></a><span class="lineno">  286</span>&#160;      <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> trec =</div>
+<div class="line"><a name="l00287"></a><span class="lineno">  287</span>&#160;        runOnLoop(subLoop, subLoop-&gt;getSubLoops(), omega, nwr);</div>
+<div class="line"><a name="l00288"></a><span class="lineno">  288</span>&#160; </div>
+<div class="line"><a name="l00289"></a><span class="lineno">  289</span>&#160;      <span class="keywordflow">if</span> (trec.accept(depth)) {</div>
+<div class="line"><a name="l00290"></a><span class="lineno">  290</span>&#160;        <span class="keywordflow">if</span> (!AL) AL = trec.getLoop();</div>
+<div class="line"><a name="l00291"></a><span class="lineno">  291</span>&#160;        <span class="keywordflow">if</span> (AL) {</div>
+<div class="line"><a name="l00292"></a><span class="lineno">  292</span>&#160;          <span class="comment">// recursion succeeded; see if we can connect the path</span></div>
+<div class="line"><a name="l00293"></a><span class="lineno">  293</span>&#160;          llvm::BasicBlock *subLoopExit = subLoop-&gt;getExitBlock();</div>
+<div class="line"><a name="l00294"></a><span class="lineno">  294</span>&#160;          <span class="comment">// for fusion, we need to build a path from subLoopExit to E</span></div>
+<div class="line"><a name="l00295"></a><span class="lineno">  295</span>&#160;          <span class="comment">// where E is the preheader of the preceding loopnest</span></div>
+<div class="line"><a name="l00296"></a><span class="lineno">  296</span>&#160;          <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> trblock =</div>
+<div class="line"><a name="l00297"></a><span class="lineno">  297</span>&#160;            parseBlocks(subLoopExit, E, L, omega, AL, tr);</div>
+<div class="line"><a name="l00298"></a><span class="lineno">  298</span>&#160;          <span class="keywordflow">if</span> (trblock.accept(depth)) {</div>
+<div class="line"><a name="l00299"></a><span class="lineno">  299</span>&#160;            tr = trblock;</div>
+<div class="line"><a name="l00300"></a><span class="lineno">  300</span>&#160;            tr *= trec;</div>
+<div class="line"><a name="l00301"></a><span class="lineno">  301</span>&#160;          } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l00302"></a><span class="lineno">  302</span>&#160;            failed = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00303"></a><span class="lineno">  303</span>&#160;            <span class="keywordflow">if</span> (tr.accept(depth)) optimize(tr);</div>
+<div class="line"><a name="l00304"></a><span class="lineno">  304</span>&#160;            <span class="comment">// we start now with trec</span></div>
+<div class="line"><a name="l00305"></a><span class="lineno">  305</span>&#160;            tr = trec;</div>
+<div class="line"><a name="l00306"></a><span class="lineno">  306</span>&#160;          }</div>
+<div class="line"><a name="l00307"></a><span class="lineno">  307</span>&#160;          E = subLoop-&gt;getLoopPreheader(); <span class="comment">// want to draw a path from trec</span></div>
+<div class="line"><a name="l00308"></a><span class="lineno">  308</span>&#160;          <span class="keywordflow">continue</span>;</div>
+<div class="line"><a name="l00309"></a><span class="lineno">  309</span>&#160;        }</div>
+<div class="line"><a name="l00310"></a><span class="lineno">  310</span>&#160;      }</div>
+<div class="line"><a name="l00311"></a><span class="lineno">  311</span>&#160;      <span class="comment">// we reject, because we failed to build a trec with a LoopNest</span></div>
+<div class="line"><a name="l00312"></a><span class="lineno">  312</span>&#160;      failed = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l00313"></a><span class="lineno">  313</span>&#160;      optimize(tr);</div>
+<div class="line"><a name="l00314"></a><span class="lineno">  314</span>&#160;      tr = {};</div>
+<div class="line"><a name="l00315"></a><span class="lineno">  315</span>&#160;      <span class="comment">// we don&#39;t need to draw a path from anything, so only exit needed</span></div>
+<div class="line"><a name="l00316"></a><span class="lineno">  316</span>&#160;      <span class="keywordflow">if</span> (i) E = subLoops[i - 1]-&gt;getExitBlock();</div>
+<div class="line"><a name="l00317"></a><span class="lineno">  317</span>&#160;    }</div>
+<div class="line"><a name="l00318"></a><span class="lineno">  318</span>&#160;    <span class="keywordflow">if</span> (failed) {</div>
+<div class="line"><a name="l00319"></a><span class="lineno">  319</span>&#160;      <span class="keywordflow">if</span> (tr.accept(depth)) optimize(tr);</div>
+<div class="line"><a name="l00320"></a><span class="lineno">  320</span>&#160;      omega.pop_back();</div>
+<div class="line"><a name="l00321"></a><span class="lineno">  321</span>&#160;      <span class="keywordflow">return</span> {};</div>
+<div class="line"><a name="l00322"></a><span class="lineno">  322</span>&#160;    }</div>
+<div class="line"><a name="l00323"></a><span class="lineno">  323</span>&#160;    <span class="comment">// now we try to go from E to H</span></div>
+<div class="line"><a name="l00324"></a><span class="lineno">  324</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> trblock = parseBlocks(L-&gt;getHeader(), E, L, omega, AL, tr);</div>
+<div class="line"><a name="l00325"></a><span class="lineno">  325</span>&#160;    <span class="keywordflow">if</span> (trblock.reject(depth)) {</div>
+<div class="line"><a name="l00326"></a><span class="lineno">  326</span>&#160;      optimize(tr); <span class="comment">// optimize old tr</span></div>
+<div class="line"><a name="l00327"></a><span class="lineno">  327</span>&#160;      tr = {};</div>
+<div class="line"><a name="l00328"></a><span class="lineno">  328</span>&#160;    } <span class="keywordflow">else</span> tr = trblock;</div>
+<div class="line"><a name="l00329"></a><span class="lineno">  329</span>&#160;    omega.pop_back();</div>
+<div class="line"><a name="l00330"></a><span class="lineno">  330</span>&#160;    <span class="keywordflow">return</span> tr;</div>
+<div class="line"><a name="l00331"></a><span class="lineno">  331</span>&#160;  }</div>
+<div class="line"><a name="l00332"></a><span class="lineno">  332</span>&#160; </div>
+<div class="line"><a name="l00333"></a><span class="lineno">  333</span>&#160;  <span class="keywordtype">void</span> optimize(<a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr) {</div>
+<div class="line"><a name="l00334"></a><span class="lineno">  334</span>&#160;    <span class="comment">// now we build the LinearProgram</span></div>
+<div class="line"><a name="l00335"></a><span class="lineno">  335</span>&#160;    <a class="code" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">lp::LoopBlock::OptimizationResult</a> lpor =</div>
+<div class="line"><a name="l00336"></a><span class="lineno">  336</span>&#160;      loopBlock.optimize(instructions, tr);</div>
+<div class="line"><a name="l00337"></a><span class="lineno">  337</span>&#160;    <span class="keywordflow">if</span> (!lpor.nodes) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00338"></a><span class="lineno">  338</span>&#160;    <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *addr : lpor.addr.getAddr())</div>
+<div class="line"><a name="l00339"></a><span class="lineno">  339</span>&#160;      loopBBs.insert(addr-&gt;getBasicBlock());</div>
+<div class="line"><a name="l00340"></a><span class="lineno">  340</span>&#160;    CostModeling::optimize(loopBlock.getDependencies(), instructions, loopBBs,</div>
+<div class="line"><a name="l00341"></a><span class="lineno">  341</span>&#160;                           eraseCandidates, loopBlock.getAllocator(), lpor);</div>
+<div class="line"><a name="l00342"></a><span class="lineno">  342</span>&#160;    loopBBs.clear();</div>
+<div class="line"><a name="l00343"></a><span class="lineno">  343</span>&#160;  }</div>
+<div class="line"><a name="l00344"></a><span class="lineno">  344</span>&#160;  <span class="comment">/*</span></div>
+<div class="line"><a name="l00345"></a><span class="lineno">  345</span>&#160;<span class="comment">    auto isLoopPreHeader(const llvm::BasicBlock *BB) const -&gt; bool {</span></div>
+<div class="line"><a name="l00346"></a><span class="lineno">  346</span>&#160;<span class="comment">      if (const llvm::Instruction *term = BB-&gt;getTerminator())</span></div>
+<div class="line"><a name="l00347"></a><span class="lineno">  347</span>&#160;<span class="comment">        if (const auto *BI = llvm::dyn_cast&lt;llvm::BranchInst&gt;(term))</span></div>
+<div class="line"><a name="l00348"></a><span class="lineno">  348</span>&#160;<span class="comment">          if (!BI-&gt;isConditional()) return</span></div>
+<div class="line"><a name="l00349"></a><span class="lineno">  349</span>&#160;<span class="comment">  LI-&gt;isLoopHeader(BI-&gt;getSuccessor(0)); return false;</span></div>
+<div class="line"><a name="l00350"></a><span class="lineno">  350</span>&#160;<span class="comment">    }</span></div>
+<div class="line"><a name="l00351"></a><span class="lineno">  351</span>&#160;<span class="comment">    inline static auto containsPeeled(const llvm::SCEV *Sc, size_t numPeeled)</span></div>
+<div class="line"><a name="l00352"></a><span class="lineno">  352</span>&#160;<span class="comment">      -&gt; bool {</span></div>
+<div class="line"><a name="l00353"></a><span class="lineno">  353</span>&#160;<span class="comment">      return llvm::SCEVExprContains(Sc, [numPeeled](const llvm::SCEV *S) {</span></div>
+<div class="line"><a name="l00354"></a><span class="lineno">  354</span>&#160;<span class="comment">        if (const auto *r = llvm::dyn_cast&lt;llvm::SCEVAddRecExpr&gt;(S))</span></div>
+<div class="line"><a name="l00355"></a><span class="lineno">  355</span>&#160;<span class="comment">          if (r-&gt;getLoop()-&gt;getLoopDepth() &lt;= numPeeled) return true;</span></div>
+<div class="line"><a name="l00356"></a><span class="lineno">  356</span>&#160;<span class="comment">        return false;</span></div>
+<div class="line"><a name="l00357"></a><span class="lineno">  357</span>&#160;<span class="comment">      });</span></div>
+<div class="line"><a name="l00358"></a><span class="lineno">  358</span>&#160;<span class="comment">  }</span></div>
+<div class="line"><a name="l00359"></a><span class="lineno">  359</span>&#160;<span class="comment">    */</span></div>
+<div class="line"><a name="l00360"></a><span class="lineno">  360</span>&#160;  <span class="comment">// https://llvm.org/doxygen/LoopVectorize_8cpp_source.html#l00932</span></div>
+<div class="line"><a name="l00361"></a><span class="lineno">  361</span>&#160;  <span class="keywordtype">void</span> remark(<span class="keyword">const</span> llvm::StringRef remarkName, llvm::Loop *L,</div>
+<div class="line"><a name="l00362"></a><span class="lineno">  362</span>&#160;              <span class="keyword">const</span> llvm::StringRef remarkMessage,</div>
+<div class="line"><a name="l00363"></a><span class="lineno">  363</span>&#160;              llvm::Instruction *J = <span class="keyword">nullptr</span>)<span class="keyword"> const </span>{</div>
+<div class="line"><a name="l00364"></a><span class="lineno">  364</span>&#160; </div>
+<div class="line"><a name="l00365"></a><span class="lineno">  365</span>&#160;    llvm::OptimizationRemarkAnalysis analysis{remarkAnalysis(remarkName, L, J)};</div>
+<div class="line"><a name="l00366"></a><span class="lineno">  366</span>&#160;    ORE-&gt;emit(analysis &lt;&lt; remarkMessage);</div>
+<div class="line"><a name="l00367"></a><span class="lineno">  367</span>&#160;  }</div>
+<div class="line"><a name="l00368"></a><span class="lineno">  368</span>&#160;  <span class="comment">// void buildInstructionGraph(LoopTree &amp;root) {</span></div>
+<div class="line"><a name="l00369"></a><span class="lineno">  369</span>&#160;  <span class="comment">//     // predicates</span></div>
+<div class="line"><a name="l00370"></a><span class="lineno">  370</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00371"></a><span class="lineno">  371</span>&#160;  <span class="comment">// ~TurboLoopPass() {</span></div>
+<div class="line"><a name="l00372"></a><span class="lineno">  372</span>&#160;  <span class="comment">//   for (auto l : loopForests) l-&gt;~LoopTree();</span></div>
+<div class="line"><a name="l00373"></a><span class="lineno">  373</span>&#160;  <span class="comment">// }</span></div>
+<div class="line"><a name="l00374"></a><span class="lineno">  374</span>&#160;<span class="keyword">public</span>:</div>
+<div class="line"><a name="l00375"></a><span class="lineno">  375</span>&#160;  <a class="code" href="classpoly_1_1TurboLoop.html">TurboLoop</a>(llvm::Function &amp;F, llvm::FunctionAnalysisManager &amp;FAM)</div>
+<div class="line"><a name="l00376"></a><span class="lineno">  376</span>&#160;    : TLI{&amp;FAM.getResult&lt;llvm::TargetLibraryAnalysis&gt;(F)},</div>
+<div class="line"><a name="l00377"></a><span class="lineno">  377</span>&#160;      TTI{&amp;FAM.getResult&lt;llvm::TargetIRAnalysis&gt;(F)},</div>
+<div class="line"><a name="l00378"></a><span class="lineno">  378</span>&#160;      LI{&amp;FAM.getResult&lt;llvm::LoopAnalysis&gt;(F)},</div>
+<div class="line"><a name="l00379"></a><span class="lineno">  379</span>&#160;      SE{&amp;FAM.getResult&lt;llvm::ScalarEvolutionAnalysis&gt;(F)},</div>
+<div class="line"><a name="l00380"></a><span class="lineno">  380</span>&#160;      ORE{&amp;FAM.getResult&lt;llvm::OptimizationRemarkEmitterAnalysis&gt;(F)},</div>
+<div class="line"><a name="l00381"></a><span class="lineno">  381</span>&#160;      registers{F.getContext(), *TTI} {}</div>
+<div class="line"><a name="l00382"></a><span class="lineno">  382</span>&#160;  <span class="comment">// llvm::LoopNest LA = FAM.getResult&lt;llvm::LoopNestAnalysis&gt;(F);</span></div>
+<div class="line"><a name="l00383"></a><span class="lineno">  383</span>&#160;  <span class="comment">// llvm::AssumptionCache &amp;AC = FAM.getResult&lt;llvm::AssumptionAnalysis&gt;(F);</span></div>
+<div class="line"><a name="l00384"></a><span class="lineno">  384</span>&#160;  <span class="comment">// llvm::DominatorTree &amp;DT = FAM.getResult&lt;llvm::DominatorTreeAnalysis&gt;(F);</span></div>
+<div class="line"><a name="l00385"></a><span class="lineno">  385</span>&#160;  <span class="comment">// TLI = &amp;FAM.getResult&lt;llvm::TargetLibraryAnalysis&gt;(F);</span></div>
+<div class="line"><a name="l00386"></a><span class="lineno">  386</span>&#160;  <span class="keyword">auto</span> run() {</div>
+<div class="line"><a name="l00387"></a><span class="lineno">  387</span>&#160; </div>
+<div class="line"><a name="l00388"></a><span class="lineno">  388</span>&#160;    <span class="keywordflow">if</span> (!ORE-&gt;enabled()) ORE = <span class="keyword">nullptr</span>; <span class="comment">// cheaper check</span></div>
+<div class="line"><a name="l00389"></a><span class="lineno">  389</span>&#160;    <span class="keywordflow">if</span> (ORE) {</div>
+<div class="line"><a name="l00390"></a><span class="lineno">  390</span>&#160;      <span class="comment">// llvm::OptimizationRemarkAnalysis</span></div>
+<div class="line"><a name="l00391"></a><span class="lineno">  391</span>&#160;      <span class="comment">// analysis{remarkAnalysis(&quot;RegisterCount&quot;, *LI-&gt;begin())};</span></div>
+<div class="line"><a name="l00392"></a><span class="lineno">  392</span>&#160;      <span class="comment">// ORE-&gt;emit(analysis &lt;&lt; &quot;There are</span></div>
+<div class="line"><a name="l00393"></a><span class="lineno">  393</span>&#160;      <span class="comment">// &quot;&lt;&lt;TTI-&gt;getNumberOfRegisters(0)&lt;&lt;&quot; scalar registers&quot;);</span></div>
+<div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;      llvm::SmallString&lt;32&gt; str = llvm::formatv(</div>
+<div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;        <span class="stringliteral">&quot;there are {0} scalar registers&quot;</span>, TTI-&gt;getNumberOfRegisters(0));</div>
+<div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160; </div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;      remark(<span class="stringliteral">&quot;ScalarRegisterCount&quot;</span>, *LI-&gt;begin(), str);</div>
+<div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;      str = llvm::formatv(<span class="stringliteral">&quot;there are {0} vector registers&quot;</span>,</div>
+<div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;                          registers.getNumVectorBits());</div>
+<div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;      remark(<span class="stringliteral">&quot;VectorRegisterCount&quot;</span>, *LI-&gt;begin(), str);</div>
+<div class="line"><a name="l00401"></a><span class="lineno">  401</span>&#160;    }</div>
+<div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;    <span class="comment">// Builds the loopForest, constructing predicate chains and loop nests</span></div>
+<div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;    <a class="code" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr = initializeLoopForest();</div>
+<div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;    <span class="keywordflow">if</span> (tr.accept(0)) optimize(tr);</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    <span class="keywordflow">return</span> llvm::PreservedAnalyses::none();</div>
+<div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;  }</div>
+<div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;};</div>
+<div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:79</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html">poly::IR::Cache</a></div><div class="ttdef"><b>Definition:</b> Cache.hpp:175</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Cache_html_a6fc976093ca556ac42bc46e2c8e372f0"><div class="ttname"><a href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">poly::IR::Cache::getAllocator</a></div><div class="ttdeci">constexpr auto getAllocator() -&gt; Arena&lt;&gt; *</div><div class="ttdef"><b>Definition:</b> Cache.hpp:398</div></div>

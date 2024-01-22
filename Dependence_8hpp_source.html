@@ -1274,9 +1274,9 @@ $(function() {
 <div class="line"><a name="l01243"></a><span class="lineno"> 1243</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
 <div class="line"><a name="l01244"></a><span class="lineno"> 1244</span>&#160;  <span class="comment">// no inner dependence</span></div>
 <div class="line"><a name="l01245"></a><span class="lineno"> 1245</span>&#160;  PtrMatrix&lt;int64_t&gt; inInd = in-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>(), outInd = out-&gt;indexMatrix();</div>
-<div class="line"><a name="l01246"></a><span class="lineno"> 1246</span>&#160;  invariant(inInd.numRow(),outInd.numRow());</div>
+<div class="line"><a name="l01246"></a><span class="lineno"> 1246</span>&#160;  invariant(inInd.numRow(), outInd.numRow());</div>
 <div class="line"><a name="l01247"></a><span class="lineno"> 1247</span>&#160;  ptrdiff_t d = L-&gt;getCurrentDepth();</div>
-<div class="line"><a name="l01248"></a><span class="lineno"> 1248</span>&#160;  invariant(inInd.numRow()&gt;= d);</div>
+<div class="line"><a name="l01248"></a><span class="lineno"> 1248</span>&#160;  invariant(inInd.numRow() &gt;= d);</div>
 <div class="line"><a name="l01249"></a><span class="lineno"> 1249</span>&#160;  <span class="comment">// if (ind</span></div>
 <div class="line"><a name="l01250"></a><span class="lineno"> 1250</span>&#160;  <span class="keywordflow">return</span> <span class="keyword">true</span>;</div>
 <div class="line"><a name="l01251"></a><span class="lineno"> 1251</span>&#160;}</div>
