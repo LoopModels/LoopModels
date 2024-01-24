@@ -1300,71 +1300,94 @@ $(function() {
 <div class="line"><a name="l01269"></a><span class="lineno"> 1269</span>&#160;  }</div>
 <div class="line"><a name="l01270"></a><span class="lineno"> 1270</span>&#160;}</div>
 <div class="line"><a name="l01271"></a><span class="lineno"> 1271</span>&#160; </div>
-<div class="line"><a name="l01272"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies.html#a793496055f051fb9995ff9a2e214c44a"> 1272</a></span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Dependencies::calcReorderability(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, int32_t <span class="keywordtype">id</span>) -&gt; <span class="keywordtype">bool</span> {</div>
-<div class="line"><a name="l01273"></a><span class="lineno"> 1273</span>&#160;  <span class="keyword">auto</span> id_ = <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>};</div>
-<div class="line"><a name="l01274"></a><span class="lineno"> 1274</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in = input(id_), *out = output(id_);</div>
-<div class="line"><a name="l01275"></a><span class="lineno"> 1275</span>&#160;  <span class="comment">// clang-format off</span></div>
-<div class="line"><a name="l01276"></a><span class="lineno"> 1276</span>&#160;  <span class="comment">// If we have a dependency nested inside `L`, we won&#39;t be able to reorder if either</span></div>
-<div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;  <span class="comment">// a) that dependency&#39;s output is `in`</span></div>
-<div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;  <span class="comment">// b) that dependency&#39;s input is `out`</span></div>
-<div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;  <span class="comment">// as we&#39;d then have to maintain the order of this loop level&#39;s evaluations with respect</span></div>
-<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;  <span class="comment">// to the subloop.</span></div>
-<div class="line"><a name="l01281"></a><span class="lineno"> 1281</span>&#160;  <span class="comment">// Otherwise, we check</span></div>
-<div class="line"><a name="l01282"></a><span class="lineno"> 1282</span>&#160;  <span class="comment">// 1. If this dependency may be peeled. For this, it must</span></div>
-<div class="line"><a name="l01283"></a><span class="lineno"> 1283</span>&#160;  <span class="comment">//   a) be indexed by both `L` and a subloop of `L`.</span></div>
-<div class="line"><a name="l01284"></a><span class="lineno"> 1284</span>&#160;  <span class="comment">//   b) have an equality relation, so that it occurs for a single iteration fo the subloop.</span></div>
-<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;  <span class="comment">//   Then, we can split the subloop across this value, scalarizing around it.</span></div>
-<div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;  <span class="comment">// 2. Is this dependency reassociable? E.g., if it&#39;s connected by reassociable adds</span></div>
-<div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;  <span class="comment">//   (such as integer adds, or floating point with the reassociable FMF), then mark it as such.</span></div>
-<div class="line"><a name="l01288"></a><span class="lineno"> 1288</span>&#160;  <span class="comment">// clang-format on</span></div>
-<div class="line"><a name="l01289"></a><span class="lineno"> 1289</span>&#160;  <span class="keywordflow">if</span> (anyInteriorDependencies(L, in) || anyInteriorDependents(L, out))</div>
-<div class="line"><a name="l01290"></a><span class="lineno"> 1290</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
-<div class="line"><a name="l01291"></a><span class="lineno"> 1291</span>&#160;  <span class="comment">// no inner dependence</span></div>
-<div class="line"><a name="l01292"></a><span class="lineno"> 1292</span>&#160;  PtrMatrix&lt;int64_t&gt; inInd = in-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>(), outInd = out-&gt;indexMatrix();</div>
-<div class="line"><a name="l01293"></a><span class="lineno"> 1293</span>&#160;  invariant(inInd.numRow(), outInd.numRow());</div>
-<div class="line"><a name="l01294"></a><span class="lineno"> 1294</span>&#160;  ptrdiff_t d = L-&gt;getCurrentDepth();</div>
-<div class="line"><a name="l01295"></a><span class="lineno"> 1295</span>&#160;  invariant(inInd.numRow() &gt;= d);</div>
-<div class="line"><a name="l01296"></a><span class="lineno"> 1296</span>&#160;  <span class="keywordtype">bool</span> peelable = <span class="keyword">false</span>, reassociable = <span class="keyword">false</span>;</div>
-<div class="line"><a name="l01297"></a><span class="lineno"> 1297</span>&#160;  <span class="keywordflow">if</span> (math::allZero(inInd[_, d])) {</div>
-<div class="line"><a name="l01298"></a><span class="lineno"> 1298</span>&#160;    <span class="keywordflow">if</span> (!math::allZero(outInd[_, d])) {</div>
-<div class="line"><a name="l01299"></a><span class="lineno"> 1299</span>&#160;      <span class="comment">// now, we want to find a loop that `in` depends on but `out` does not</span></div>
-<div class="line"><a name="l01300"></a><span class="lineno"> 1300</span>&#160;      <span class="comment">// so that we can split over this loop.</span></div>
-<div class="line"><a name="l01301"></a><span class="lineno"> 1301</span>&#160;      <span class="comment">// For now, to simplify codegen, we only accept the innermost non-zero</span></div>
-<div class="line"><a name="l01302"></a><span class="lineno"> 1302</span>&#160;      <span class="keywordflow">if</span> (ptrdiff_t i = innermostNonZero(inInd, d); i &gt;= 0) {</div>
-<div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;        getPeel(id_) = i;</div>
-<div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;        peelable = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;      }</div>
-<div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;    }</div>
-<div class="line"><a name="l01307"></a><span class="lineno"> 1307</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (math::allZero(outInd[_, d])) {</div>
-<div class="line"><a name="l01308"></a><span class="lineno"> 1308</span>&#160;    <span class="keywordflow">if</span> (!math::allZero(inInd[_, d])) {</div>
-<div class="line"><a name="l01309"></a><span class="lineno"> 1309</span>&#160;      <span class="keywordflow">if</span> (ptrdiff_t i = innermostNonZero(outInd, d); i &gt;= 0) {</div>
-<div class="line"><a name="l01310"></a><span class="lineno"> 1310</span>&#160;        getPeel(id_) = i;</div>
-<div class="line"><a name="l01311"></a><span class="lineno"> 1311</span>&#160;        peelable = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l01312"></a><span class="lineno"> 1312</span>&#160;      }</div>
-<div class="line"><a name="l01313"></a><span class="lineno"> 1313</span>&#160;    }</div>
-<div class="line"><a name="l01314"></a><span class="lineno"> 1314</span>&#160;  }</div>
-<div class="line"><a name="l01315"></a><span class="lineno"> 1315</span>&#160;  int32_t rte = revTimeEdge(id_);</div>
-<div class="line"><a name="l01316"></a><span class="lineno"> 1316</span>&#160;  <span class="keywordflow">if</span> ((rte &gt;= 0) &amp;&amp; (in-&gt;isLoad() != out-&gt;isLoad()) &amp;&amp;</div>
-<div class="line"><a name="l01317"></a><span class="lineno"> 1317</span>&#160;      (!(getMeta(id_) &amp; Dependence::NotReassociable)) &amp;&amp;</div>
-<div class="line"><a name="l01318"></a><span class="lineno"> 1318</span>&#160;      canReassociate(in, out)) {</div>
-<div class="line"><a name="l01319"></a><span class="lineno"> 1319</span>&#160;    reassociable = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l01320"></a><span class="lineno"> 1320</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::Reassociable;</div>
-<div class="line"><a name="l01321"></a><span class="lineno"> 1321</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l01322"></a><span class="lineno"> 1322</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::NotReassociable;</div>
-<div class="line"><a name="l01323"></a><span class="lineno"> 1323</span>&#160;    <span class="comment">// set all in cycle to `NotReassociable`, so we don&#39;t recalc</span></div>
-<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;    <span class="keywordflow">if</span> (rte &gt;= 0) {</div>
-<div class="line"><a name="l01325"></a><span class="lineno"> 1325</span>&#160;      <span class="keywordflow">for</span> (int32_t stop = <span class="keywordtype">id</span>; rte != stop;) {</div>
-<div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160;        <span class="keyword">auto</span> rtid = <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{rte};</div>
-<div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160;        getMeta(rtid) = getMeta(rtid) | Dependence::NotReassociable;</div>
-<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;        rte = revTimeEdge(rtid);</div>
-<div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;      }</div>
-<div class="line"><a name="l01330"></a><span class="lineno"> 1330</span>&#160;    }</div>
-<div class="line"><a name="l01331"></a><span class="lineno"> 1331</span>&#160;  }</div>
-<div class="line"><a name="l01332"></a><span class="lineno"> 1332</span>&#160;  <span class="keywordflow">return</span> peelable || reassociable;</div>
-<div class="line"><a name="l01333"></a><span class="lineno"> 1333</span>&#160;}</div>
-<div class="line"><a name="l01334"></a><span class="lineno"> 1334</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="line"><a name="l01335"></a><span class="lineno"> 1335</span>&#160; </div>
-<div class="line"><a name="l01336"></a><span class="lineno"> 1336</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01272"></a><span class="lineno"> 1272</span>&#160;<span class="comment">// returns `true` if this dependence can be reordered, `false` otherwise</span></div>
+<div class="line"><a name="l01273"></a><span class="lineno"> 1273</span>&#160;<span class="comment">// note that the associated loop itself may need scalarization, but subloop</span></div>
+<div class="line"><a name="l01274"></a><span class="lineno"> 1274</span>&#160;<span class="comment">// evaluations could be reorderable</span></div>
+<div class="line"><a name="l01275"></a><span class="lineno"> 1275</span>&#160;<span class="comment">// How would we capture dependencies/uses like</span></div>
+<div class="line"><a name="l01276"></a><span class="lineno"> 1276</span>&#160;<span class="comment">// int64_t x = 0;</span></div>
+<div class="line"><a name="l01277"></a><span class="lineno"> 1277</span>&#160;<span class="comment">// for (ptrdiff_t m = 0; m &lt; M; ++m){</span></div>
+<div class="line"><a name="l01278"></a><span class="lineno"> 1278</span>&#160;<span class="comment">//   x += a[m];</span></div>
+<div class="line"><a name="l01279"></a><span class="lineno"> 1279</span>&#160;<span class="comment">//   b[m] = x;</span></div>
+<div class="line"><a name="l01280"></a><span class="lineno"> 1280</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l01281"></a><span class="lineno"> 1281</span>&#160;<span class="comment">// we have `x +=` as a reassociable self-dependence, but the fact it is stored</span></div>
+<div class="line"><a name="l01282"></a><span class="lineno"> 1282</span>&#160;<span class="comment">// into `b[m]` means that we can&#39;t really reassociate, as each nominal</span></div>
+<div class="line"><a name="l01283"></a><span class="lineno"> 1283</span>&#160;<span class="comment">// intermediate value of `x` must be realized!</span></div>
+<div class="line"><a name="l01284"></a><span class="lineno"> 1284</span>&#160;<span class="comment">// We must check that there are no other reads. Note that this is represented as</span></div>
+<div class="line"><a name="l01285"></a><span class="lineno"> 1285</span>&#160;<span class="comment">// int64_t x[1]{};</span></div>
+<div class="line"><a name="l01286"></a><span class="lineno"> 1286</span>&#160;<span class="comment">// for (ptrdiff_t m = 0; m &lt; M; ++m){</span></div>
+<div class="line"><a name="l01287"></a><span class="lineno"> 1287</span>&#160;<span class="comment">//   x[0] = x[0] + a[m];</span></div>
+<div class="line"><a name="l01288"></a><span class="lineno"> 1288</span>&#160;<span class="comment">//   b[m] = x[0];</span></div>
+<div class="line"><a name="l01289"></a><span class="lineno"> 1289</span>&#160;<span class="comment">// }</span></div>
+<div class="line"><a name="l01290"></a><span class="lineno"> 1290</span>&#160;<span class="comment">// So we have write-&gt;read dependence for the store `x[0] =` to the read in</span></div>
+<div class="line"><a name="l01291"></a><span class="lineno"> 1291</span>&#160;<span class="comment">// `b[m] = x[0]`. The key observation here is that `x[0]` has a time component;</span></div>
+<div class="line"><a name="l01292"></a><span class="lineno"> 1292</span>&#160;<span class="comment">// the violation occurs because we store in another location, providing a</span></div>
+<div class="line"><a name="l01293"></a><span class="lineno"> 1293</span>&#160;<span class="comment">// non-reassociable component.</span></div>
+<div class="line"><a name="l01294"></a><span class="lineno"><a class="line" href="classpoly_1_1poly_1_1Dependencies.html#a793496055f051fb9995ff9a2e214c44a"> 1294</a></span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Dependencies::calcReorderability(<a class="code" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, int32_t <span class="keywordtype">id</span>) -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l01295"></a><span class="lineno"> 1295</span>&#160;  <span class="keyword">auto</span> id_ = <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{<span class="keywordtype">id</span>};</div>
+<div class="line"><a name="l01296"></a><span class="lineno"> 1296</span>&#160;  <a class="code" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in = input(id_), *out = output(id_);</div>
+<div class="line"><a name="l01297"></a><span class="lineno"> 1297</span>&#160;  <span class="comment">// clang-format off</span></div>
+<div class="line"><a name="l01298"></a><span class="lineno"> 1298</span>&#160;  <span class="comment">// If we have a dependency nested inside `L`, we won&#39;t be able to reorder if either</span></div>
+<div class="line"><a name="l01299"></a><span class="lineno"> 1299</span>&#160;  <span class="comment">// a) that dependency&#39;s output is `in`</span></div>
+<div class="line"><a name="l01300"></a><span class="lineno"> 1300</span>&#160;  <span class="comment">// b) that dependency&#39;s input is `out`</span></div>
+<div class="line"><a name="l01301"></a><span class="lineno"> 1301</span>&#160;  <span class="comment">// as we&#39;d then have to maintain the order of this loop level&#39;s evaluations with respect</span></div>
+<div class="line"><a name="l01302"></a><span class="lineno"> 1302</span>&#160;  <span class="comment">// to the subloop.</span></div>
+<div class="line"><a name="l01303"></a><span class="lineno"> 1303</span>&#160;  <span class="comment">// Otherwise, we check</span></div>
+<div class="line"><a name="l01304"></a><span class="lineno"> 1304</span>&#160;  <span class="comment">// 1. If this dependency may be peeled. For this, it must</span></div>
+<div class="line"><a name="l01305"></a><span class="lineno"> 1305</span>&#160;  <span class="comment">//   a) be indexed by both `L` and a subloop of `L`.</span></div>
+<div class="line"><a name="l01306"></a><span class="lineno"> 1306</span>&#160;  <span class="comment">//   b) have an equality relation, so that it occurs for a single iteration fo the subloop.</span></div>
+<div class="line"><a name="l01307"></a><span class="lineno"> 1307</span>&#160;  <span class="comment">//   Then, we can split the subloop across this value, scalarizing around it.</span></div>
+<div class="line"><a name="l01308"></a><span class="lineno"> 1308</span>&#160;  <span class="comment">// 2. Is this dependency reassociable? E.g., if it&#39;s connected by reassociable adds</span></div>
+<div class="line"><a name="l01309"></a><span class="lineno"> 1309</span>&#160;  <span class="comment">//   (such as integer adds, or floating point with the reassociable FMF), then mark it as such.</span></div>
+<div class="line"><a name="l01310"></a><span class="lineno"> 1310</span>&#160;  <span class="comment">// clang-format on</span></div>
+<div class="line"><a name="l01311"></a><span class="lineno"> 1311</span>&#160;  <span class="comment">//</span></div>
+<div class="line"><a name="l01312"></a><span class="lineno"> 1312</span>&#160;  <span class="keywordflow">if</span> (anyInteriorDependencies(L, in) || anyInteriorDependents(L, out))</div>
+<div class="line"><a name="l01313"></a><span class="lineno"> 1313</span>&#160;    <span class="keywordflow">return</span> <span class="keyword">false</span>;</div>
+<div class="line"><a name="l01314"></a><span class="lineno"> 1314</span>&#160;  <span class="comment">// no inner dependence</span></div>
+<div class="line"><a name="l01315"></a><span class="lineno"> 1315</span>&#160;  PtrMatrix&lt;int64_t&gt; inInd = in-&gt;<a class="code" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">indexMatrix</a>(), outInd = out-&gt;indexMatrix();</div>
+<div class="line"><a name="l01316"></a><span class="lineno"> 1316</span>&#160;  invariant(inInd.numRow(), outInd.numRow());</div>
+<div class="line"><a name="l01317"></a><span class="lineno"> 1317</span>&#160;  ptrdiff_t d = L-&gt;getCurrentDepth();</div>
+<div class="line"><a name="l01318"></a><span class="lineno"> 1318</span>&#160;  invariant(inInd.numRow() &gt;= d);</div>
+<div class="line"><a name="l01319"></a><span class="lineno"> 1319</span>&#160;  <span class="keywordtype">bool</span> peelable = <span class="keyword">false</span>, reassociable = <span class="keyword">false</span>;</div>
+<div class="line"><a name="l01320"></a><span class="lineno"> 1320</span>&#160;  <span class="keywordflow">if</span> (math::allZero(inInd[_, d])) {</div>
+<div class="line"><a name="l01321"></a><span class="lineno"> 1321</span>&#160;    <span class="keywordflow">if</span> (!math::allZero(outInd[_, d])) {</div>
+<div class="line"><a name="l01322"></a><span class="lineno"> 1322</span>&#160;      <span class="comment">// now, we want to find a loop that `in` depends on but `out` does not</span></div>
+<div class="line"><a name="l01323"></a><span class="lineno"> 1323</span>&#160;      <span class="comment">// so that we can split over this loop.</span></div>
+<div class="line"><a name="l01324"></a><span class="lineno"> 1324</span>&#160;      <span class="comment">// For now, to simplify codegen, we only accept the innermost non-zero</span></div>
+<div class="line"><a name="l01325"></a><span class="lineno"> 1325</span>&#160;      <span class="keywordflow">if</span> (ptrdiff_t i = innermostNonZero(inInd, d); i &gt;= 0) {</div>
+<div class="line"><a name="l01326"></a><span class="lineno"> 1326</span>&#160;        getPeel(id_) = i;</div>
+<div class="line"><a name="l01327"></a><span class="lineno"> 1327</span>&#160;        peelable = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l01328"></a><span class="lineno"> 1328</span>&#160;      }</div>
+<div class="line"><a name="l01329"></a><span class="lineno"> 1329</span>&#160;    }</div>
+<div class="line"><a name="l01330"></a><span class="lineno"> 1330</span>&#160;  } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (math::allZero(outInd[_, d])) {</div>
+<div class="line"><a name="l01331"></a><span class="lineno"> 1331</span>&#160;    <span class="keywordflow">if</span> (!math::allZero(inInd[_, d])) {</div>
+<div class="line"><a name="l01332"></a><span class="lineno"> 1332</span>&#160;      <span class="keywordflow">if</span> (ptrdiff_t i = innermostNonZero(outInd, d); i &gt;= 0) {</div>
+<div class="line"><a name="l01333"></a><span class="lineno"> 1333</span>&#160;        getPeel(id_) = i;</div>
+<div class="line"><a name="l01334"></a><span class="lineno"> 1334</span>&#160;        peelable = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l01335"></a><span class="lineno"> 1335</span>&#160;      }</div>
+<div class="line"><a name="l01336"></a><span class="lineno"> 1336</span>&#160;    }</div>
+<div class="line"><a name="l01337"></a><span class="lineno"> 1337</span>&#160;  }</div>
+<div class="line"><a name="l01338"></a><span class="lineno"> 1338</span>&#160;  int32_t rte = revTimeEdge(id_);</div>
+<div class="line"><a name="l01339"></a><span class="lineno"> 1339</span>&#160;  <span class="keywordflow">if</span> ((rte &gt;= 0) &amp;&amp; (in-&gt;isLoad() != out-&gt;isLoad()) &amp;&amp;</div>
+<div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;      (!(getMeta(id_) &amp; Dependence::NotReassociable)) &amp;&amp;</div>
+<div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;      canReassociate(in, out)) {</div>
+<div class="line"><a name="l01342"></a><span class="lineno"> 1342</span>&#160;    reassociable = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l01343"></a><span class="lineno"> 1343</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::Reassociable;</div>
+<div class="line"><a name="l01344"></a><span class="lineno"> 1344</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l01345"></a><span class="lineno"> 1345</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::NotReassociable;</div>
+<div class="line"><a name="l01346"></a><span class="lineno"> 1346</span>&#160;    <span class="comment">// set all in cycle to `NotReassociable`, so we don&#39;t recalc</span></div>
+<div class="line"><a name="l01347"></a><span class="lineno"> 1347</span>&#160;    <span class="keywordflow">if</span> (rte &gt;= 0) {</div>
+<div class="line"><a name="l01348"></a><span class="lineno"> 1348</span>&#160;      <span class="keywordflow">for</span> (int32_t stop = <span class="keywordtype">id</span>; rte != stop;) {</div>
+<div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160;        <span class="keyword">auto</span> rtid = <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{rte};</div>
+<div class="line"><a name="l01350"></a><span class="lineno"> 1350</span>&#160;        getMeta(rtid) = getMeta(rtid) | Dependence::NotReassociable;</div>
+<div class="line"><a name="l01351"></a><span class="lineno"> 1351</span>&#160;        rte = revTimeEdge(rtid);</div>
+<div class="line"><a name="l01352"></a><span class="lineno"> 1352</span>&#160;      }</div>
+<div class="line"><a name="l01353"></a><span class="lineno"> 1353</span>&#160;    }</div>
+<div class="line"><a name="l01354"></a><span class="lineno"> 1354</span>&#160;  }</div>
+<div class="line"><a name="l01355"></a><span class="lineno"> 1355</span>&#160;  <span class="keywordflow">return</span> peelable || reassociable;</div>
+<div class="line"><a name="l01356"></a><span class="lineno"> 1356</span>&#160;}</div>
+<div class="line"><a name="l01357"></a><span class="lineno"> 1357</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01358"></a><span class="lineno"> 1358</span>&#160; </div>
+<div class="line"><a name="l01359"></a><span class="lineno"> 1359</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:79</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> Address.hpp:541</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:289</div></div>
