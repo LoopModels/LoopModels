@@ -102,10 +102,10 @@ $(function() {
 <div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;<span class="keyword">namespace </span>poly::IR {</div>
 <div class="line"><a name="l00086"></a><span class="lineno">   86</span>&#160;constexpr <span class="keyword">inline</span> <span class="keywordtype">void</span></div>
 <div class="line"><a name="l00087"></a><span class="lineno"><a class="line" href="classpoly_1_1IR_1_1Addr.html#accdad85de4ae77ef8e4477c2821a37a6">   87</a></span>&#160;<a class="code" href="classpoly_1_1IR_1_1Addr.html#accdad85de4ae77ef8e4477c2821a37a6">Addr::maybeReassociableReduction</a>(<span class="keyword">const</span> <a class="code" href="classpoly_1_1poly_1_1Dependencies.html">Dependencies</a> &amp;deps) {</div>
-<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="keywordflow">if</span> (isLoad()) <span class="keywordflow">return</span>;</div>
-<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="comment">// we should have a store whose first output edge is the load for</span></div>
-<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="comment">// the following iteration. This iter is the reverse-time</span></div>
-<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// edge.</span></div>
+<div class="line"><a name="l00088"></a><span class="lineno">   88</span>&#160;  <span class="comment">// we only run for `this-&gt;isStore() &amp;&amp; dst-&gt;isLoad()`</span></div>
+<div class="line"><a name="l00089"></a><span class="lineno">   89</span>&#160;  <span class="keywordflow">if</span> (isLoad()) <span class="keywordflow">return</span>;</div>
+<div class="line"><a name="l00090"></a><span class="lineno">   90</span>&#160;  <span class="comment">// we should have a store whose first output edge is the load for</span></div>
+<div class="line"><a name="l00091"></a><span class="lineno">   91</span>&#160;  <span class="comment">// the following iteration. This iter is the reverse-time edge.</span></div>
 <div class="line"><a name="l00092"></a><span class="lineno">   92</span>&#160;  <span class="keyword">auto</span> edges{outputEdgeIDs(deps, getCurrentDepth())};</div>
 <div class="line"><a name="l00093"></a><span class="lineno">   93</span>&#160;  <span class="keyword">auto</span> B = edges.begin();</div>
 <div class="line"><a name="l00094"></a><span class="lineno">   94</span>&#160;  <span class="keywordflow">if</span> (B == edges.end()) <span class="keywordflow">return</span>;</div>

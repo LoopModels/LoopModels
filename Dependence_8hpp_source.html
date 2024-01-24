@@ -1366,28 +1366,30 @@ $(function() {
 <div class="line"><a name="l01335"></a><span class="lineno"> 1335</span>&#160;      }</div>
 <div class="line"><a name="l01336"></a><span class="lineno"> 1336</span>&#160;    }</div>
 <div class="line"><a name="l01337"></a><span class="lineno"> 1337</span>&#160;  }</div>
-<div class="line"><a name="l01338"></a><span class="lineno"> 1338</span>&#160;  int32_t rte = revTimeEdge(id_);</div>
-<div class="line"><a name="l01339"></a><span class="lineno"> 1339</span>&#160;  <span class="keywordflow">if</span> ((rte &gt;= 0) &amp;&amp; (in-&gt;isLoad() != out-&gt;isLoad()) &amp;&amp;</div>
-<div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;      (!(getMeta(id_) &amp; Dependence::NotReassociable)) &amp;&amp;</div>
-<div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;      canReassociate(in, out)) {</div>
-<div class="line"><a name="l01342"></a><span class="lineno"> 1342</span>&#160;    reassociable = <span class="keyword">true</span>;</div>
-<div class="line"><a name="l01343"></a><span class="lineno"> 1343</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::Reassociable;</div>
-<div class="line"><a name="l01344"></a><span class="lineno"> 1344</span>&#160;  } <span class="keywordflow">else</span> {</div>
-<div class="line"><a name="l01345"></a><span class="lineno"> 1345</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::NotReassociable;</div>
-<div class="line"><a name="l01346"></a><span class="lineno"> 1346</span>&#160;    <span class="comment">// set all in cycle to `NotReassociable`, so we don&#39;t recalc</span></div>
-<div class="line"><a name="l01347"></a><span class="lineno"> 1347</span>&#160;    <span class="keywordflow">if</span> (rte &gt;= 0) {</div>
-<div class="line"><a name="l01348"></a><span class="lineno"> 1348</span>&#160;      <span class="keywordflow">for</span> (int32_t stop = <span class="keywordtype">id</span>; rte != stop;) {</div>
-<div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160;        <span class="keyword">auto</span> rtid = <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{rte};</div>
-<div class="line"><a name="l01350"></a><span class="lineno"> 1350</span>&#160;        getMeta(rtid) = getMeta(rtid) | Dependence::NotReassociable;</div>
-<div class="line"><a name="l01351"></a><span class="lineno"> 1351</span>&#160;        rte = revTimeEdge(rtid);</div>
-<div class="line"><a name="l01352"></a><span class="lineno"> 1352</span>&#160;      }</div>
-<div class="line"><a name="l01353"></a><span class="lineno"> 1353</span>&#160;    }</div>
-<div class="line"><a name="l01354"></a><span class="lineno"> 1354</span>&#160;  }</div>
-<div class="line"><a name="l01355"></a><span class="lineno"> 1355</span>&#160;  <span class="keywordflow">return</span> peelable || reassociable;</div>
-<div class="line"><a name="l01356"></a><span class="lineno"> 1356</span>&#160;}</div>
-<div class="line"><a name="l01357"></a><span class="lineno"> 1357</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="line"><a name="l01358"></a><span class="lineno"> 1358</span>&#160; </div>
+<div class="line"><a name="l01338"></a><span class="lineno"> 1338</span>&#160;  <span class="comment">// TODO: check `reassociableReduction` field instead of using the following</span></div>
+<div class="line"><a name="l01339"></a><span class="lineno"> 1339</span>&#160;  <span class="comment">// check</span></div>
+<div class="line"><a name="l01340"></a><span class="lineno"> 1340</span>&#160;  int32_t rte = revTimeEdge(id_);</div>
+<div class="line"><a name="l01341"></a><span class="lineno"> 1341</span>&#160;  <span class="keywordflow">if</span> ((rte &gt;= 0) &amp;&amp; (in-&gt;isLoad() != out-&gt;isLoad()) &amp;&amp;</div>
+<div class="line"><a name="l01342"></a><span class="lineno"> 1342</span>&#160;      (!(getMeta(id_) &amp; Dependence::NotReassociable)) &amp;&amp;</div>
+<div class="line"><a name="l01343"></a><span class="lineno"> 1343</span>&#160;      canReassociate(in, out)) {</div>
+<div class="line"><a name="l01344"></a><span class="lineno"> 1344</span>&#160;    reassociable = <span class="keyword">true</span>;</div>
+<div class="line"><a name="l01345"></a><span class="lineno"> 1345</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::Reassociable;</div>
+<div class="line"><a name="l01346"></a><span class="lineno"> 1346</span>&#160;  } <span class="keywordflow">else</span> {</div>
+<div class="line"><a name="l01347"></a><span class="lineno"> 1347</span>&#160;    getMeta(id_) = getMeta(id_) | Dependence::NotReassociable;</div>
+<div class="line"><a name="l01348"></a><span class="lineno"> 1348</span>&#160;    <span class="comment">// set all in cycle to `NotReassociable`, so we don&#39;t recalc</span></div>
+<div class="line"><a name="l01349"></a><span class="lineno"> 1349</span>&#160;    <span class="keywordflow">if</span> (rte &gt;= 0) {</div>
+<div class="line"><a name="l01350"></a><span class="lineno"> 1350</span>&#160;      <span class="keywordflow">for</span> (int32_t stop = <span class="keywordtype">id</span>; rte != stop;) {</div>
+<div class="line"><a name="l01351"></a><span class="lineno"> 1351</span>&#160;        <span class="keyword">auto</span> rtid = <a class="code" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a>{rte};</div>
+<div class="line"><a name="l01352"></a><span class="lineno"> 1352</span>&#160;        getMeta(rtid) = getMeta(rtid) | Dependence::NotReassociable;</div>
+<div class="line"><a name="l01353"></a><span class="lineno"> 1353</span>&#160;        rte = revTimeEdge(rtid);</div>
+<div class="line"><a name="l01354"></a><span class="lineno"> 1354</span>&#160;      }</div>
+<div class="line"><a name="l01355"></a><span class="lineno"> 1355</span>&#160;    }</div>
+<div class="line"><a name="l01356"></a><span class="lineno"> 1356</span>&#160;  }</div>
+<div class="line"><a name="l01357"></a><span class="lineno"> 1357</span>&#160;  <span class="keywordflow">return</span> peelable || reassociable;</div>
+<div class="line"><a name="l01358"></a><span class="lineno"> 1358</span>&#160;}</div>
 <div class="line"><a name="l01359"></a><span class="lineno"> 1359</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="line"><a name="l01360"></a><span class="lineno"> 1360</span>&#160; </div>
+<div class="line"><a name="l01361"></a><span class="lineno"> 1361</span>&#160;} <span class="comment">// namespace poly</span></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html">poly::IR::Addr</a></div><div class="ttdef"><b>Definition:</b> Address.hpp:79</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_af4838372d11fd32b964c9a7cb6d4b1b8"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr::indexMatrix</a></div><div class="ttdeci">constexpr auto indexMatrix() -&gt; MutDensePtrMatrix&lt; int64_t &gt;</div><div class="ttdef"><b>Definition:</b> Address.hpp:541</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Loop.html">poly::IR::Loop</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:289</div></div>
