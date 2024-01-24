@@ -1269,6 +1269,28 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
   }
 }
 
+// returns `true` if this dependence can be reordered, `false` otherwise
+// note that the associated loop itself may need scalarization, but subloop
+// evaluations could be reorderable
+// How would we capture dependencies/uses like
+// int64_t x = 0;
+// for (ptrdiff_t m = 0; m < M; ++m){
+//   x += a[m];
+//   b[m] = x;
+// }
+// we have `x +=` as a reassociable self-dependence, but the fact it is stored
+// into `b[m]` means that we can't really reassociate, as each nominal
+// intermediate value of `x` must be realized!
+// We must check that there are no other reads. Note that this is represented as
+// int64_t x[1]{};
+// for (ptrdiff_t m = 0; m < M; ++m){
+//   x[0] = x[0] + a[m];
+//   b[m] = x[0];
+// }
+// So we have write->read dependence for the store `x[0] =` to the read in
+// `b[m] = x[0]`. The key observation here is that `x[0]` has a time component;
+// the violation occurs because we store in another location, providing a
+// non-reassociable component.
 inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
   auto id_ = Dependence::ID{id};
   IR::Addr *in = input(id_), *out = output(id_);
@@ -1286,6 +1308,7 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
   // 2. Is this dependency reassociable? E.g., if it's connected by reassociable adds
   //   (such as integer adds, or floating point with the reassociable FMF), then mark it as such.
   // clang-format on
+  //
   if (anyInteriorDependencies(L, in) || anyInteriorDependents(L, out))
     return false;
   // no inner dependence

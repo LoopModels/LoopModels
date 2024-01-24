@@ -60,6 +60,29 @@ namespace poly::IR {
 /// `x[i] = acc` are top sorted. The load `acc = x[i]` should be the very
 /// first output topologically -- afterall, it occus before the store!!
 /// TODO: does `Addr` hoisting handle this??
+/// Consider also the example:
+/// int64_t x[1]{};
+/// for (ptrdiff_t n = 0; n < N; ++n){
+///   x[0] = x[0] + y[n];
+///   z[n] = x[0];
+/// }
+/// this is harder to understand than, but behaves the same as
+/// z[0] = y[n];
+/// for (ptrdiff_t n = 1; n < N; ++n){
+///   z[n] = z[n-1] + y[n];
+/// }
+/// int64_t x[1]{z[N-1]};
+/// which does not have any reductions.
+/// This should be handled because, if we had a loop like
+/// int64_t x[1]{};
+/// for (ptrdiff_t n = 0; n < N; ++n) x[0] = x[0] + y[n];
+/// it should be optimized into
+/// int64_t x[1]{};
+/// auto xv = x[0];
+/// for (ptrdiff_t n = 0; n < N; ++n) xv = xv + y[n];
+/// x[0] = xv;
+/// However, the assignment `z[n]` should block the hoisting of the load/store
+/// and we can check that failure to hoist for verifying legality.
 constexpr inline void
 Addr::maybeReassociableReduction(const Dependencies &deps) {
   if (isLoad()) return;
@@ -70,7 +93,7 @@ Addr::maybeReassociableReduction(const Dependencies &deps) {
   auto B = edges.begin();
   if (B == edges.end()) return;
   poly::Dependence::ID id{*B};
-  if (!deps.revTimeEdge(id)) return;
+  if (deps.revTimeEdge(id) < 0) return;
   IR::Addr *dst = deps.output(id);
   if (dst->isStore() || (getLoop() != dst->getLoop())) return;
   // if we failed to hoist the `Addr` out of time-dims, then we cannot optimize.
@@ -78,8 +101,7 @@ Addr::maybeReassociableReduction(const Dependencies &deps) {
   if (reassociableReduction == dst) return; // multiple time dims, already found
   auto *c = llvm::dyn_cast<IR::Compute>(getStoredVal());
   if (!c) return;
-  unsigned f = findThroughReassociable(dst, c);
-  if (f != 1) return;
+  if (findThroughReassociable(dst, c) != 1) return;
   reassociableReduction = dst;
   dst->reassociableReduction = this;
 }
