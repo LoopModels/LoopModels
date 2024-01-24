@@ -852,6 +852,7 @@ constexpr auto find(Addr *src, Compute *dst) -> bool {
 // from dst, search through operands for `src`
 // NOLINTNEXTLINE misc-no-recursion
 constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
+  invariant(src->isLoad());
   uint32_t reassociable = dst->reassociableArgs();
   // foundflag&1 == found reassociable
   // foundflag&2 == found non-reassociable

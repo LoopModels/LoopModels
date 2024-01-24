@@ -85,10 +85,10 @@ namespace poly::IR {
 /// and we can check that failure to hoist for verifying legality.
 constexpr inline void
 Addr::maybeReassociableReduction(const Dependencies &deps) {
+  // we only run for `this->isStore() && dst->isLoad()`
   if (isLoad()) return;
   // we should have a store whose first output edge is the load for
-  // the following iteration. This iter is the reverse-time
-  // edge.
+  // the following iteration. This iter is the reverse-time edge.
   auto edges{outputEdgeIDs(deps, getCurrentDepth())};
   auto B = edges.begin();
   if (B == edges.end()) return;

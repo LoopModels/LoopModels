@@ -1335,6 +1335,8 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
       }
     }
   }
+  // TODO: check `reassociableReduction` field instead of using the following
+  // check
   int32_t rte = revTimeEdge(id_);
   if ((rte >= 0) && (in->isLoad() != out->isLoad()) &&
       (!(getMeta(id_) & Dependence::NotReassociable)) &&
