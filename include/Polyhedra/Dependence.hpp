@@ -1293,19 +1293,16 @@ inline auto Dependencies::determinePeelDepth(IR::Loop *L, int32_t id) -> bool {
   invariant(inInd.numRow(), outInd.numRow());
   ptrdiff_t d = L->getCurrentDepth();
   invariant(inInd.numRow() >= d);
-  bool peelable = false, noInIndAtDepth = math::allZero(inInd[_, d]),
+  bool noInIndAtDepth = math::allZero(inInd[_, d]),
        noOutIndAtDepth = math::allZero(outInd[_, d]);
-  if (noInIndAtDepth != noOutIndAtDepth) {
-    // now, we want to find a loop that `in` depends on but `out` does not
-    // so that we can split over this loop.
-    // For now, to simplify codegen, we only accept the innermost non-zero
-    if (ptrdiff_t i = innermostNonZero(noInIndAtDepth ? inInd : outInd, d);
-        i >= 0) {
-      getPeel(id_) = i;
-      peelable = true;
-    }
-  }
-  return peelable;
+  if (noInIndAtDepth == noOutIndAtDepth) return false;
+  // now, we want to find a loop that `in` depends on but `out` does not
+  // so that we can split over this loop.
+  // For now, to simplify codegen, we only accept the innermost non-zero
+  ptrdiff_t i = innermostNonZero(noInIndAtDepth ? inInd : outInd, d);
+  if (i < 0) return false;
+  getPeel(id_) = i;
+  return true;
 }
 } // namespace poly
 
