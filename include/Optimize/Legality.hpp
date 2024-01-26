@@ -56,6 +56,7 @@ namespace poly::CostModeling {
 // }
 // Here, we can unroll and jam.
 // example 3:
+//
 // for (ptrdiff_t i = 1; i < x.size()-3; i+=4){
 //   decltype(y[0,0]+y[0,0]) s0 = 0;
 //   decltype(y[0,0]+y[0,0]) s1 = 0;
@@ -72,6 +73,8 @@ namespace poly::CostModeling {
 //   x[i+2] += s2 * x[i+1];
 //   x[i+3] += s3 * x[i+2];
 // }
+//
+//
 // So we can generalize to say, we can always unroll the innermost where the
 // addr are read.
 //
@@ -95,9 +98,12 @@ namespace poly::CostModeling {
 // it shouldn't be too difficult to check for extra outputs, etc.
 // so we do that all here, after the `Addr` placements and simplifications
 //
+// For examples 2-3 above, we should have a concept of must-scalarize this
+// loop's execution, but that we can vectorize/reorder it within subloops.
 struct Legality {
   // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
-  uint16_t unordered_reduction_count{0};
+  uint8_t ordered_reduction_count{0};
+  uint8_t unordered_reduction_count{0};
   uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
   uint16_t maxdistance{0};
   bool canPeel{true};
@@ -112,6 +118,7 @@ struct Legality {
   // [[nodiscard]] constexpr auto maxIters() const -> uint16_t { return
   // maxiters; }
   constexpr auto operator&=(Legality other) -> Legality & {
+    ordered_reduction_count += other.ordered_reduction_count;
     unordered_reduction_count += other.unordered_reduction_count;
     mindistance = std::min(mindistance, other.mindistance);
     maxdistance = std::max(maxdistance, other.maxdistance);
@@ -136,12 +143,14 @@ struct Legality {
                                  return (a->getLoop() != L) && L->contains(a);
                                });
   }
-  void update(poly::Dependencies &deps, IR::Loop *L, Dependence d) {
+  auto update(poly::Dependencies &deps, IR::Loop *L, Dependence d) -> bool {
     // note: the dependence hasn't been rotated
     IR::Addr *in = d.out, *out = d.in;
-    if (d.revTimeEdge() && (in->reassociableReductionPair() != out)) {
-      ++unordered_reduction_count;
-      return;
+    if (d.revTimeEdge()) {
+      bool reassociable = in->reassociableReductionPair() != out;
+      if (reassociable) ++unordered_reduction_count;
+      if (!reassociable) ++ordered_reduction_count;
+      return reassociable;
     }
     /// Now we check if we're allowed any reorderings
     /// First of all, consider that unrolling is allowed if no memory accesses
@@ -152,7 +161,7 @@ struct Legality {
       maxdistance = std::numeric_limits<uint16_t>::max();
       canPeel = false;
       canUnroll = false;
-      return;
+      return false;
     }
     if (mindistance || maxdistance != std::numeric_limits<uint16_t>::max()) {
       // for now, just check peelability
@@ -160,6 +169,7 @@ struct Legality {
     if (!canPeel) {
       // then we have a dependence
     }
+    return canPeel;
   };
 
   Legality(LoopDepSatisfaction &deps, IR::Loop *L) {

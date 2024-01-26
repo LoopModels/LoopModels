@@ -886,13 +886,15 @@ private:
   //   return std::ranges::any_of(out->outputEdgeIDs(*this),
   //                              [&](int32_t i) -> bool {
   //                                IR::Addr *a = output(Dependence::ID{i});
-  //                                return (a->getLoop() != L) && L->contains(a);
+  //                                return (a->getLoop() != L) &&
+  //                                L->contains(a);
   //                              });
   // }
 
   // inline auto anyInteriorDependencies(IR::Loop *L, IR::Addr *in) -> bool {
 
-  //   return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) -> bool {
+  //   return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) ->
+  //   bool {
   //     IR::Addr *a = input(Dependence::ID{i});
   //     return (a->getLoop() != L) && L->contains(a);
   //   });
@@ -1138,7 +1140,7 @@ public:
   /// NOTE: this method uses `in` and `out` to check for reorderability, as
   /// these get rotated after the simplex solve, while the stored `DepPoly` and
   /// simplices do not.
-  inline auto calcReorderability(IR::Loop *, int32_t) -> bool;
+  inline auto determinePeelDepth(IR::Loop *, int32_t) -> bool;
 };
 
 } // namespace poly
@@ -1244,10 +1246,10 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
   }
 }
 
-// returns `true` if this dependence can be reordered, `false` otherwise
-// note that the associated loop itself may need scalarization, but subloop
-// evaluations could be reorderable
-// How would we capture dependencies/uses like
+// returns `true` if this dependence can be reordered due to peelinng, `false`
+// otherwise note that the associated loop itself may need scalarization, but
+// subloop evaluations could be reorderable How would we capture
+// dependencies/uses like
 // int64_t x = 0;
 // for (ptrdiff_t m = 0; m < M; ++m){
 //   x += a[m];
@@ -1266,7 +1268,7 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
 // `b[m] = x[0]`. The key observation here is that `x[0]` has a time component;
 // the violation occurs because we store in another location, providing a
 // non-reassociable component.
-inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
+inline auto Dependencies::determinePeelDepth(IR::Loop *L, int32_t id) -> bool {
   auto id_ = Dependence::ID{id};
   IR::Addr *in = input(id_), *out = output(id_);
   // clang-format off
@@ -1291,28 +1293,19 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
   invariant(inInd.numRow(), outInd.numRow());
   ptrdiff_t d = L->getCurrentDepth();
   invariant(inInd.numRow() >= d);
-  bool peelable = false;
-  if (math::allZero(inInd[_, d])) {
-    if (!math::allZero(outInd[_, d])) {
-      // now, we want to find a loop that `in` depends on but `out` does not
-      // so that we can split over this loop.
-      // For now, to simplify codegen, we only accept the innermost non-zero
-      if (ptrdiff_t i = innermostNonZero(inInd, d); i >= 0) {
-        getPeel(id_) = i;
-        peelable = true;
-      }
-    }
-  } else if (math::allZero(outInd[_, d])) {
-    if (!math::allZero(inInd[_, d])) {
-      if (ptrdiff_t i = innermostNonZero(outInd, d); i >= 0) {
-        getPeel(id_) = i;
-        peelable = true;
-      }
+  bool peelable = false, noInIndAtDepth = math::allZero(inInd[_, d]),
+       noOutIndAtDepth = math::allZero(outInd[_, d]);
+  if (noInIndAtDepth != noOutIndAtDepth) {
+    // now, we want to find a loop that `in` depends on but `out` does not
+    // so that we can split over this loop.
+    // For now, to simplify codegen, we only accept the innermost non-zero
+    if (ptrdiff_t i = innermostNonZero(noInIndAtDepth ? inInd : outInd, d);
+        i >= 0) {
+      getPeel(id_) = i;
+      peelable = true;
     }
   }
-  bool reassociable = in->reassociableReductionPair() == out;
-  invariant(reassociable == (out->reassociableReductionPair() == in));
-  return peelable || reassociable;
+  return peelable;
 }
 } // namespace poly
 
