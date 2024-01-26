@@ -100,31 +100,38 @@ namespace poly::CostModeling {
 //
 // For examples 2-3 above, we should have a concept of must-scalarize this
 // loop's execution, but that we can vectorize/reorder it within subloops.
-struct Legality {
-  // enum class Reduction { None = 0, Unordered = 1, Ordered = 2 };
+class Legality {
+  enum class Illegal : uint8_t {
+    None = 0,
+    Unroll = 1,
+    ReorderThis = 2,
+    ReorderSubLoops = 4
+  };
+  uint16_t peelFlag{0};
+  uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
+  uint8_t maxdistance{0};
   uint8_t ordered_reduction_count{0};
   uint8_t unordered_reduction_count{0};
-  uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
-  uint16_t maxdistance{0};
-  bool canPeel{true};
-  bool canUnroll{true};
-  // uint16_t maxiters{0};
+  uint8_t illegalFlag{0};
+
+public:
   [[nodiscard]] constexpr auto minDistance() const -> uint16_t {
     return mindistance;
   }
   [[nodiscard]] constexpr auto maxDistance() const -> uint16_t {
     return mindistance;
   }
-  // [[nodiscard]] constexpr auto maxIters() const -> uint16_t { return
-  // maxiters; }
+  [[nodiscard]] constexpr auto noUnroll() const -> bool {
+    return illegalFlag & uint8_t(Illegal::Unroll);
+  }
+  [[nodiscard]] constexpr auto canUnroll() const -> bool { return !noUnroll(); }
   constexpr auto operator&=(Legality other) -> Legality & {
     ordered_reduction_count += other.ordered_reduction_count;
     unordered_reduction_count += other.unordered_reduction_count;
     mindistance = std::min(mindistance, other.mindistance);
     maxdistance = std::max(maxdistance, other.maxdistance);
-    canPeel = canPeel & other.canPeel;
-    canUnroll = canUnroll & other.canUnroll;
-    // maxiters = std::max(maxiters, other.maxiters);
+    peelFlag |= other.peelFlag;
+    illegalFlag |= other.illegalFlag;
     return *this;
   }
   [[nodiscard]] constexpr auto operator&(Legality other) const -> Legality {
@@ -143,9 +150,30 @@ struct Legality {
                                  return (a->getLoop() != L) && L->contains(a);
                                });
   }
-  auto update(poly::Dependencies &deps, IR::Loop *L, Dependence d) -> bool {
+  // inline auto anyInteriorDependents(IR::Loop *L, IR::Addr *out) -> bool {
+  //   return std::ranges::any_of(out->outputEdgeIDs(*this),
+  //                              [&](int32_t i) -> bool {
+  //                                IR::Addr *a = output(Dependence::ID{i});
+  //                                return (a->getLoop() != L) &&
+  //                                L->contains(a);
+  //                              });
+  // }
+
+  // inline auto anyInteriorDependencies(IR::Loop *L, IR::Addr *in) -> bool {
+
+  //   return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) ->
+  //   bool {
+  //     IR::Addr *a = input(Dependence::ID{i});
+  //     return (a->getLoop() != L) && L->contains(a);
+  //   });
+  // }
+  auto update(poly::Dependencies &deps, IR::Loop *L, int32_t did) -> bool {
     // note: the dependence hasn't been rotated
+    Dependence d{deps.get(Dependence::ID{did})};
     IR::Addr *in = d.out, *out = d.in;
+    if (utils::Optional<size_t> peel = deps.determinePeelDepth(L, did))
+      peelFlag |= (1 << (*peel));
+
     if (d.revTimeEdge()) {
       bool reassociable = in->reassociableReductionPair() != out;
       if (reassociable) ++unordered_reduction_count;
@@ -156,7 +184,7 @@ struct Legality {
     /// First of all, consider that unrolling is allowed if no memory accesses
     /// dependent on the `in` or `out` are in a deeper loop (e.g. example 3),
     /// even if vectorization is not.
-    if (canUnroll && d.revTimeEdge() && deeperAccess(deps, L, in)) {
+    if (canUnroll() && d.revTimeEdge() && deeperAccess(deps, L, in)) {
       mindistance = 0;
       maxdistance = std::numeric_limits<uint16_t>::max();
       canPeel = false;
@@ -173,9 +201,10 @@ struct Legality {
   };
 
   Legality(LoopDepSatisfaction &deps, IR::Loop *L) {
-    for (poly::Dependence d : deps.depencencies(L)) update(deps.deps, L, d);
+    for (int32_t did : deps.dependencyIDs(L))
+      if (!update(deps.deps, L, did)) break;
   }
 };
-
+static_assert(sizeof(Legality) == 8);
 } // namespace poly::CostModeling
 #endif // POLY_LEGALITY_HPP_INCLUDED

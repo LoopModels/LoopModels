@@ -600,6 +600,7 @@ public:
     return datadeps.size();
   }
 
+private:
   constexpr auto tup(Dependence d, int32_t i) -> Tuple {
     IR::Addr *out = d.output(), *in = d.input();
     if (out->getEdgeOut() >= 0) prevOut(ID{out->getEdgeOut()}) = i;
@@ -620,7 +621,6 @@ public:
                  d.getPeel()};
   }
 
-private:
   /// set(ID i, Dependence d)
   /// stores `d` at index `i`
   /// Dependence `d` is pushed to the fronts of the edgeOut and edgeIn chains.
@@ -882,23 +882,6 @@ private:
 
     };
   }
-  // inline auto anyInteriorDependents(IR::Loop *L, IR::Addr *out) -> bool {
-  //   return std::ranges::any_of(out->outputEdgeIDs(*this),
-  //                              [&](int32_t i) -> bool {
-  //                                IR::Addr *a = output(Dependence::ID{i});
-  //                                return (a->getLoop() != L) &&
-  //                                L->contains(a);
-  //                              });
-  // }
-
-  // inline auto anyInteriorDependencies(IR::Loop *L, IR::Addr *in) -> bool {
-
-  //   return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) ->
-  //   bool {
-  //     IR::Addr *a = input(Dependence::ID{i});
-  //     return (a->getLoop() != L) && L->contains(a);
-  //   });
-  // }
   static auto innermostNonZero(PtrMatrix<int64_t> A, ptrdiff_t skip)
     -> ptrdiff_t {
     for (ptrdiff_t i = ptrdiff_t(A.numCol()); --i;) {
@@ -1140,7 +1123,8 @@ public:
   /// NOTE: this method uses `in` and `out` to check for reorderability, as
   /// these get rotated after the simplex solve, while the stored `DepPoly` and
   /// simplices do not.
-  inline auto determinePeelDepth(IR::Loop *, int32_t) -> bool;
+  inline auto determinePeelDepth(IR::Loop *, int32_t)
+    -> utils::Optional<size_t>;
 };
 
 } // namespace poly
@@ -1268,7 +1252,8 @@ inline void Dependencies::copyDependencies(IR::Addr *src, IR::Addr *dst) {
 // `b[m] = x[0]`. The key observation here is that `x[0]` has a time component;
 // the violation occurs because we store in another location, providing a
 // non-reassociable component.
-inline auto Dependencies::determinePeelDepth(IR::Loop *L, int32_t id) -> bool {
+inline auto Dependencies::determinePeelDepth(IR::Loop *L, int32_t id)
+  -> utils::Optional<size_t> {
   auto id_ = Dependence::ID{id};
   IR::Addr *in = input(id_), *out = output(id_);
   // clang-format off
@@ -1295,14 +1280,14 @@ inline auto Dependencies::determinePeelDepth(IR::Loop *L, int32_t id) -> bool {
   invariant(inInd.numRow() >= d);
   bool noInIndAtDepth = math::allZero(inInd[_, d]),
        noOutIndAtDepth = math::allZero(outInd[_, d]);
-  if (noInIndAtDepth == noOutIndAtDepth) return false;
+  if (noInIndAtDepth == noOutIndAtDepth) return -1;
   // now, we want to find a loop that `in` depends on but `out` does not
   // so that we can split over this loop.
   // For now, to simplify codegen, we only accept the innermost non-zero
   ptrdiff_t i = innermostNonZero(noInIndAtDepth ? inInd : outInd, d);
-  if (i < 0) return false;
-  getPeel(id_) = i;
-  return true;
+  if (i >= 0) getPeel(id_) = i;
+  return i >= 0 ? utils::Optional<size_t>{size_t(i)}
+                : utils::Optional<size_t>{};
 }
 } // namespace poly
 
