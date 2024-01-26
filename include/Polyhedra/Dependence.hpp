@@ -29,6 +29,7 @@ struct Dependence {
     int32_t id;
     [[nodiscard]] constexpr explicit operator bool() const { return id >= 0; }
   };
+  // TODO: revert to `bool` flag for `Forward`?
   enum MetaFlags : uint8_t {
     Forward = 1,
     FreeOfDeeperDeps = 2,
@@ -881,21 +882,21 @@ private:
 
     };
   }
-  inline auto anyInteriorDependents(IR::Loop *L, IR::Addr *out) -> bool {
-    return std::ranges::any_of(out->outputEdgeIDs(*this),
-                               [&](int32_t i) -> bool {
-                                 IR::Addr *a = output(Dependence::ID{i});
-                                 return (a->getLoop() != L) && L->contains(a);
-                               });
-  }
+  // inline auto anyInteriorDependents(IR::Loop *L, IR::Addr *out) -> bool {
+  //   return std::ranges::any_of(out->outputEdgeIDs(*this),
+  //                              [&](int32_t i) -> bool {
+  //                                IR::Addr *a = output(Dependence::ID{i});
+  //                                return (a->getLoop() != L) && L->contains(a);
+  //                              });
+  // }
 
-  inline auto anyInteriorDependencies(IR::Loop *L, IR::Addr *in) -> bool {
+  // inline auto anyInteriorDependencies(IR::Loop *L, IR::Addr *in) -> bool {
 
-    return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) -> bool {
-      IR::Addr *a = input(Dependence::ID{i});
-      return (a->getLoop() != L) && L->contains(a);
-    });
-  }
+  //   return std::ranges::any_of(in->inputEdgeIDs(*this), [&](int32_t i) -> bool {
+  //     IR::Addr *a = input(Dependence::ID{i});
+  //     return (a->getLoop() != L) && L->contains(a);
+  //   });
+  // }
   static auto innermostNonZero(PtrMatrix<int64_t> A, ptrdiff_t skip)
     -> ptrdiff_t {
     for (ptrdiff_t i = ptrdiff_t(A.numCol()); --i;) {
@@ -903,32 +904,6 @@ private:
       if (!math::allZero(A[_, i])) return i;
     }
     return -1;
-  }
-  /*
-   * Check `findThroughReassociable` and its uses; we should be able to use that
-  here.
-  enum OperationChainReassociability { NoPath, ReassociablePath,
-    NonReassociablePath
-  };
-  static auto checkPathReassociability {
-
-  }
-  */
-  // For this to be reassociable, we must have a chain of reassociable
-  // operations from `in->out`. Additionally, it is strogly recommended to check
-  // if `revTimeEdge(id) >= 0` prior to calling this, as it is only meaningful
-  // when true.
-  // Must also check that `in->isLoad() != out->isLoad()`.
-  // We may have either that `in -> out` (forward time), or `out -> in` (reverse
-  // time) but we still need to check both cases to mark as reassociable.
-  // TODO: add a not reassociable, check if already defined
-  // after determining, store result in entire cycle
-  static auto canReassociate(IR::Addr *in, IR::Addr *out) -> bool {
-    invariant(in->isLoad() != out->isLoad());
-    if (in->indexMatrix() != out->indexMatrix()) return false;
-    IR::Addr *load = in->isLoad() ? in : out, *store = in->isLoad() ? out : in;
-    // do we have a reassociable chain of operations from `load` to `store`?
-    return false;
   }
 
 public:
@@ -1309,14 +1284,14 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
   //   (such as integer adds, or floating point with the reassociable FMF), then mark it as such.
   // clang-format on
   //
-  if (anyInteriorDependencies(L, in) || anyInteriorDependents(L, out))
-    return false;
+  // if (anyInteriorDependencies(L, in) || anyInteriorDependents(L, out))
+  //   return false;
   // no inner dependence
   PtrMatrix<int64_t> inInd = in->indexMatrix(), outInd = out->indexMatrix();
   invariant(inInd.numRow(), outInd.numRow());
   ptrdiff_t d = L->getCurrentDepth();
   invariant(inInd.numRow() >= d);
-  bool peelable = false, reassociable = false;
+  bool peelable = false;
   if (math::allZero(inInd[_, d])) {
     if (!math::allZero(outInd[_, d])) {
       // now, we want to find a loop that `in` depends on but `out` does not
@@ -1335,25 +1310,8 @@ inline auto Dependencies::calcReorderability(IR::Loop *L, int32_t id) -> bool {
       }
     }
   }
-  // TODO: check `reassociableReduction` field instead of using the following
-  // check
-  int32_t rte = revTimeEdge(id_);
-  if ((rte >= 0) && (in->isLoad() != out->isLoad()) &&
-      (!(getMeta(id_) & Dependence::NotReassociable)) &&
-      canReassociate(in, out)) {
-    reassociable = true;
-    getMeta(id_) = getMeta(id_) | Dependence::Reassociable;
-  } else {
-    getMeta(id_) = getMeta(id_) | Dependence::NotReassociable;
-    // set all in cycle to `NotReassociable`, so we don't recalc
-    if (rte >= 0) {
-      for (int32_t stop = id; rte != stop;) {
-        auto rtid = Dependence::ID{rte};
-        getMeta(rtid) = getMeta(rtid) | Dependence::NotReassociable;
-        rte = revTimeEdge(rtid);
-      }
-    }
-  }
+  bool reassociable = in->reassociableReductionPair() == out;
+  invariant(reassociable == (out->reassociableReductionPair() == in));
   return peelable || reassociable;
 }
 } // namespace poly
