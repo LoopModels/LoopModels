@@ -4,6 +4,7 @@
 #include "Containers/UnrolledList.hpp"
 #include "IR/InstructionCost.hpp"
 #include "IR/Users.hpp"
+#include "Optimize/Legality.hpp"
 #include "Polyhedra/Loops.hpp"
 #include "Support/Iterators.hpp"
 #include "Utilities/ListRanges.hpp"
@@ -287,20 +288,12 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 /// last is the last instruction in the body
 /// exit is the associated exit block
 class Loop : public Node {
-  // TOOD: this is to be replaced with
-  // the `Legality` struct
-  enum LegalTransforms {
-    Unknown = 0,
-    DependenceFree = 1,
-    IndexMismatch = 2,
-    None = 3
-  };
   poly::Loop *affineLoop{nullptr};
   Node *last{nullptr};
   /// loopMeta's leading 2 bits give `LegalTransforms`
   /// remaining 30 bits give an ID to the loop.
   /// IDs are in topologically sorted order.
-  uint32_t loopMeta;
+  CostModeling::Legality legality{};
   int32_t edgeId{-1};
   // LegalTransforms legal{Unknown};
   // while `child` points to the first contained instruction,
@@ -308,23 +301,11 @@ class Loop : public Node {
   // and can be used for backwards iteration over the graph.
 
 public:
-  constexpr void setMeta(uint32_t m) { loopMeta = m; }
-  [[nodiscard]] constexpr auto getID() const -> uint32_t {
-    return loopMeta & 0x3FFFFFFF;
-  }
-  [[nodiscard]] constexpr auto getLegal() const -> LegalTransforms {
-    return static_cast<LegalTransforms>(loopMeta >> 30);
-  }
-  constexpr auto setLegal(LegalTransforms l) -> LegalTransforms {
-    loopMeta = (loopMeta & 0x3FFFFFFF) | (static_cast<uint32_t>(l) << 30);
-    return l;
-  }
   [[nodiscard]] constexpr auto edges(poly::PtrVector<int32_t> edges) const
     -> utils::VForwardRange {
     return utils::VForwardRange{edges, edgeId};
   }
-  constexpr Loop(unsigned d)
-    : Node{VK_Loop, d}, loopMeta{std::numeric_limits<uint32_t>::max()} {}
+  constexpr Loop(unsigned d) : Node{VK_Loop, d} {}
   constexpr Loop(unsigned d, poly::Loop *AL)
     : Node{VK_Loop, d}, affineLoop{AL} {}
   static constexpr auto classof(const Node *v) -> bool {
@@ -392,8 +373,11 @@ public:
       L = L->getOuterLoop();
     return L;
   }
-  inline auto getLegality(const poly::Dependencies &, math::PtrVector<int32_t>)
-    -> LegalTransforms;
+  constexpr auto getLegality() -> CostModeling::Legality { return legality; }
+  inline void setLegality(CostModeling::LoopDepSatisfaction &deps) {
+    for (int32_t did : deps.dependencyIDs(this))
+      if (!legality.update(deps.deps, this, did)) break;
+  }
 };
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
   if (!parent || (parent->kind != VK_Loop)) return nullptr;

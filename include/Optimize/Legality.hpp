@@ -126,7 +126,8 @@ public:
   // [[nodiscard]] constexpr auto noUnroll() const -> bool {
   //   return illegalFlag & uint8_t(Illegal::Unroll);
   // }
-  [[nodiscard]] constexpr auto canUnroll() const -> bool { return !noUnroll(); }
+  // [[nodiscard]] constexpr auto canUnroll() const -> bool { return
+  // !noUnroll(); }
   constexpr auto operator&=(Legality other) -> Legality & {
     ordered_reduction_count += other.ordered_reduction_count;
     unordered_reduction_count += other.unordered_reduction_count;
@@ -136,12 +137,17 @@ public:
     // illegalFlag |= other.illegalFlag;
     return *this;
   }
+  constexpr auto operator=(const Legality &) -> Legality & = default;
   [[nodiscard]] constexpr auto operator&(Legality other) const -> Legality {
     Legality l{*this};
     return l &= other;
   }
   constexpr Legality() = default;
   constexpr Legality(const Legality &) = default;
+  Legality(LoopDepSatisfaction &deps, IR::Loop *L) {
+    for (int32_t did : deps.dependencyIDs(L))
+      if (!update(deps.deps, L, did)) break;
+  }
   // deeperAccess(const poly::Dependencies &deps, IR::Loop *L, IR::Addr *in)
   // are any of the outputs of `in` in a subloop of `L`
   static auto deeperAccess(const poly::Dependencies &deps, IR::Loop *L,
@@ -184,11 +190,6 @@ public:
     }
     return reorderable = peel.hasValue();
   };
-
-  Legality(LoopDepSatisfaction &deps, IR::Loop *L) {
-    for (int32_t did : deps.dependencyIDs(L))
-      if (!update(deps.deps, L, did)) break;
-  }
 };
 static_assert(sizeof(Legality) == 8);
 } // namespace poly::CostModeling
