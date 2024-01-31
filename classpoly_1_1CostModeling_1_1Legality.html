@@ -76,15 +76,6 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac54daf09321cabdc83919729cf2b2ff7"><td class="memItemLeft" align="right" valign="top"><a id="ac54daf09321cabdc83919729cf2b2ff7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>minDistance</b> () const -&gt; uint16_t</td></tr>
-<tr class="separator:ac54daf09321cabdc83919729cf2b2ff7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1bbba84c1c45f442c2ae51c6adb146c9"><td class="memItemLeft" align="right" valign="top"><a id="a1bbba84c1c45f442c2ae51c6adb146c9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>maxDistance</b> () const -&gt; uint16_t</td></tr>
-<tr class="separator:a1bbba84c1c45f442c2ae51c6adb146c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a54078ffc943e67360d29c655adf86fd6"><td class="memItemLeft" align="right" valign="top"><a id="a54078ffc943e67360d29c655adf86fd6"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>noUnroll</b> () const -&gt; bool</td></tr>
-<tr class="separator:a54078ffc943e67360d29c655adf86fd6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad794e034347d01e3ca4486d0d476224a"><td class="memItemLeft" align="right" valign="top"><a id="ad794e034347d01e3ca4486d0d476224a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>canUnroll</b> () const -&gt; bool</td></tr>
 <tr class="separator:ad794e034347d01e3ca4486d0d476224a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -97,7 +88,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&am
 <tr class="memitem:a56d8b397e648baabb65f5a0291dfea89"><td class="memItemLeft" align="right" valign="top"><a id="a56d8b397e648baabb65f5a0291dfea89"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (const <a class="el" href="classpoly_1_1CostModeling_1_1Legality.html">Legality</a> &amp;)=default</td></tr>
 <tr class="separator:a56d8b397e648baabb65f5a0291dfea89"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a72b2d6109ddee804c58c3b3ef11b2d7b"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1CostModeling_1_1Legality.html#a72b2d6109ddee804c58c3b3ef11b2d7b">update</a> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, int32_t did) -&gt; bool</td></tr>
+<tr class="memitem:a72b2d6109ddee804c58c3b3ef11b2d7b"><td class="memItemLeft" align="right" valign="top"><a id="a72b2d6109ddee804c58c3b3ef11b2d7b"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>update</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, int32_t did) -&gt; bool</td></tr>
 <tr class="separator:a72b2d6109ddee804c58c3b3ef11b2d7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aae2fd3583c7834737efd4dbf5f38fe3f"><td class="memItemLeft" align="right" valign="top"><a id="aae2fd3583c7834737efd4dbf5f38fe3f"></a>
 &#160;</td><td class="memItemRight" valign="bottom"><b>Legality</b> (<a class="el" href="structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html">LoopDepSatisfaction</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L)</td></tr>
@@ -109,50 +101,6 @@ Static Public Member Functions</h2></td></tr>
 static auto&#160;</td><td class="memItemRight" valign="bottom"><b>deeperAccess</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;deps, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *in) -&gt; bool</td></tr>
 <tr class="separator:a9b9c5970ea55bfbab4b93b9c2da8e135"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Function Documentation</h2>
-<a id="a72b2d6109ddee804c58c3b3ef11b2d7b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a72b2d6109ddee804c58c3b3ef11b2d7b">&#9670;&nbsp;</a></span>update()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">auto poly::CostModeling::Legality::update </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;&#160;</td>
-          <td class="paramname"><em>deps</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *&#160;</td>
-          <td class="paramname"><em>L</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int32_t&#160;</td>
-          <td class="paramname"><em>did</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td> -&gt; bool </td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-<p>Now we check if we're allowed any reorderings First of all, consider that unrolling is allowed if no memory accesses dependent on the <code>in</code> or <code>out</code> are in a deeper loop (e.g. example 3), even if vectorization is not.</p>
-
-</div>
-</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/Optimize/<a class="el" href="Legality_8hpp_source.html">Legality.hpp</a></li>
 </ul>
