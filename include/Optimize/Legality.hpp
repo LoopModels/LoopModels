@@ -101,37 +101,39 @@ namespace poly::CostModeling {
 // For examples 2-3 above, we should have a concept of must-scalarize this
 // loop's execution, but that we can vectorize/reorder it within subloops.
 class Legality {
-  enum class Illegal : uint8_t {
-    None = 0,
-    Unroll = 1,
-    ReorderThis = 2,
-    ReorderSubLoops = 4
-  };
+  // enum class Illegal : uint8_t {
+  //   None = 0,
+  //   Unroll = 1,
+  //   ReorderThis = 2,
+  //   ReorderSubLoops = 4
+  // };
   uint16_t peelFlag{0};
-  uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
-  uint8_t maxdistance{0};
-  uint8_t ordered_reduction_count{0};
-  uint8_t unordered_reduction_count{0};
-  uint8_t illegalFlag{0};
+  // TODO: use min and max distance!
+  // uint16_t mindistance{std::numeric_limits<uint16_t>::max()};
+  // uint8_t maxdistance{0};
+  uint16_t ordered_reduction_count{0};
+  uint16_t unordered_reduction_count{0};
+  bool reorderable{true};
+  // uint8_t illegalFlag{0};
 
 public:
-  [[nodiscard]] constexpr auto minDistance() const -> uint16_t {
-    return mindistance;
-  }
-  [[nodiscard]] constexpr auto maxDistance() const -> uint16_t {
-    return mindistance;
-  }
-  [[nodiscard]] constexpr auto noUnroll() const -> bool {
-    return illegalFlag & uint8_t(Illegal::Unroll);
-  }
+  // [[nodiscard]] constexpr auto minDistance() const -> uint16_t {
+  //   return mindistance;
+  // }
+  // [[nodiscard]] constexpr auto maxDistance() const -> uint16_t {
+  //   return maxdistance;
+  // }
+  // [[nodiscard]] constexpr auto noUnroll() const -> bool {
+  //   return illegalFlag & uint8_t(Illegal::Unroll);
+  // }
   [[nodiscard]] constexpr auto canUnroll() const -> bool { return !noUnroll(); }
   constexpr auto operator&=(Legality other) -> Legality & {
     ordered_reduction_count += other.ordered_reduction_count;
     unordered_reduction_count += other.unordered_reduction_count;
-    mindistance = std::min(mindistance, other.mindistance);
-    maxdistance = std::max(maxdistance, other.maxdistance);
+    // mindistance = std::min(mindistance, other.mindistance);
+    // maxdistance = std::max(maxdistance, other.maxdistance);
     peelFlag |= other.peelFlag;
-    illegalFlag |= other.illegalFlag;
+    // illegalFlag |= other.illegalFlag;
     return *this;
   }
   [[nodiscard]] constexpr auto operator&(Legality other) const -> Legality {
@@ -171,33 +173,16 @@ public:
     // note: the dependence hasn't been rotated
     Dependence d{deps.get(Dependence::ID{did})};
     IR::Addr *in = d.out, *out = d.in;
-    if (utils::Optional<size_t> peel = deps.determinePeelDepth(L, did))
-      peelFlag |= (1 << (*peel));
+    utils::Optional<size_t> peel = deps.determinePeelDepth(L, did);
+    if (peel) peelFlag |= (1 << (*peel));
 
     if (d.revTimeEdge()) {
       bool reassociable = in->reassociableReductionPair() != out;
       if (reassociable) ++unordered_reduction_count;
       if (!reassociable) ++ordered_reduction_count;
-      return reassociable;
+      return reorderable = reassociable || peel;
     }
-    /// Now we check if we're allowed any reorderings
-    /// First of all, consider that unrolling is allowed if no memory accesses
-    /// dependent on the `in` or `out` are in a deeper loop (e.g. example 3),
-    /// even if vectorization is not.
-    if (canUnroll() && d.revTimeEdge() && deeperAccess(deps, L, in)) {
-      mindistance = 0;
-      maxdistance = std::numeric_limits<uint16_t>::max();
-      canPeel = false;
-      canUnroll = false;
-      return false;
-    }
-    if (mindistance || maxdistance != std::numeric_limits<uint16_t>::max()) {
-      // for now, just check peelability
-    }
-    if (!canPeel) {
-      // then we have a dependence
-    }
-    return canPeel;
+    return reorderable = peel.hasValue();
   };
 
   Legality(LoopDepSatisfaction &deps, IR::Loop *L) {
