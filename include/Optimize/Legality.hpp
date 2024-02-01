@@ -2,12 +2,20 @@
 #ifndef POLY_LEGALITY_HPP_INCLUDED
 #define POLY_LEGALITY_HPP_INCLUDED
 
-#include "Optimize/CostModeling.hpp"
-#include "Polyhedra/Dependence.hpp"
-#include <algorithm>
 #include <cstdint>
 
-namespace poly::CostModeling {
+namespace poly {
+namespace IR {
+class Loop;
+class Addr;
+}; // namespace IR
+namespace poly {
+struct Dependence;
+class Dependencies;
+}; // namespace poly
+namespace CostModeling {
+
+struct LoopDepSatisfaction;
 
 // If a loop doesn't carry a dependency, it is legal
 // If a loop does carry a dependency, we can still consider
@@ -144,20 +152,18 @@ public:
   }
   constexpr Legality() = default;
   constexpr Legality(const Legality &) = default;
-  Legality(LoopDepSatisfaction &deps, IR::Loop *L) {
-    for (int32_t did : deps.dependencyIDs(L))
-      if (!update(deps.deps, L, did)) break;
-  }
+  Legality(LoopDepSatisfaction &deps, IR::Loop *L);
   // deeperAccess(const poly::Dependencies &deps, IR::Loop *L, IR::Addr *in)
   // are any of the outputs of `in` in a subloop of `L`
-  static auto deeperAccess(const poly::Dependencies &deps, IR::Loop *L,
-                           IR::Addr *in) -> bool {
-    return std::ranges::any_of(in->outputEdgeIDs(deps),
-                               [&](int32_t id) -> bool {
-                                 IR::Addr *a = deps.output(Dependence::ID{id});
-                                 return (a->getLoop() != L) && L->contains(a);
-                               });
-  }
+  // static auto deeperAccess(const poly::Dependencies &deps, IR::Loop *L,
+  //                          IR::Addr *in) -> bool {
+  //   return std::ranges::any_of(in->outputEdgeIDs(deps),
+  //                              [&](int32_t id) -> bool {
+  //                                IR::Addr *a =
+  //                                deps.output(Dependence::ID{id}); return
+  //                                (a->getLoop() != L) && L->contains(a);
+  //                              });
+  // }
   // inline auto anyInteriorDependents(IR::Loop *L, IR::Addr *out) -> bool {
   //   return std::ranges::any_of(out->outputEdgeIDs(*this),
   //                              [&](int32_t i) -> bool {
@@ -175,22 +181,9 @@ public:
   //     return (a->getLoop() != L) && L->contains(a);
   //   });
   // }
-  auto update(poly::Dependencies &deps, IR::Loop *L, int32_t did) -> bool {
-    // note: the dependence hasn't been rotated
-    Dependence d{deps.get(Dependence::ID{did})};
-    IR::Addr *in = d.out, *out = d.in;
-    utils::Optional<size_t> peel = deps.determinePeelDepth(L, did);
-    if (peel) peelFlag |= (1 << (*peel));
-
-    if (d.revTimeEdge()) {
-      bool reassociable = in->reassociableReductionPair() != out;
-      if (reassociable) ++unordered_reduction_count;
-      if (!reassociable) ++ordered_reduction_count;
-      return reorderable = reassociable || peel;
-    }
-    return reorderable = peel.hasValue();
-  };
+  auto update(poly::Dependencies &deps, IR::Loop *L, int32_t did) -> bool;
 };
 static_assert(sizeof(Legality) == 8);
-} // namespace poly::CostModeling
+} // namespace CostModeling
+} // namespace poly
 #endif // POLY_LEGALITY_HPP_INCLUDED

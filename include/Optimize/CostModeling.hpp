@@ -5,6 +5,7 @@
 #include "IR/Address.hpp"
 #include "LinearProgramming/LoopBlock.hpp"
 #include "LinearProgramming/ScheduledNode.hpp"
+#include "Optimize/Legality.hpp"
 #include "Polyhedra/Dependence.hpp"
 #include <Alloc/Arena.hpp>
 #include <Math/Array.hpp>
@@ -28,7 +29,8 @@
 #include <llvm/Support/Allocator.h>
 #include <llvm/Support/Casting.h>
 #include <llvm/Support/raw_ostream.h>
-namespace poly::IR {
+namespace poly {
+namespace IR {
 /// If this is a store of a reassocialbe reduction, this sets the
 /// `reassociableReduction` field to the corresponding load, and that field of
 /// the load to `this` store.
@@ -106,8 +108,8 @@ Addr::maybeReassociableReduction(const Dependencies &deps) {
   dst->reassociableReduction = this;
 }
 
-} // namespace poly::IR
-namespace poly::CostModeling {
+} // namespace IR
+namespace CostModeling {
 using poly::Dependence;
 // struct CPUExecutionModel {};
 
@@ -412,7 +414,7 @@ inline auto buildSubGraph(const IR::Dependencies &deps, IR::Loop *root,
   // top sorting as we recurse out
   for (IR::Loop *child : root->subLoops())
     id = buildSubGraph(deps, child, depth + 1, id);
-  root->setMeta(id++);
+  // root->setMeta(id++);
 
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
@@ -478,6 +480,26 @@ struct LoopDepSatisfaction {
   constexpr auto depencencies(IR::Loop *L) {
     return dependencyIDs(L) | deps.getEdgeTransform();
   }
+};
+inline Legality::Legality(LoopDepSatisfaction &deps, IR::Loop *L) {
+  for (int32_t did : deps.dependencyIDs(L))
+    if (!update(deps.deps, L, did)) break;
+}
+inline auto Legality::update(poly::Dependencies &deps, IR::Loop *L, int32_t did)
+  -> bool {
+  // note: the dependence hasn't been rotated
+  Dependence d{deps.get(Dependence::ID{did})};
+  IR::Addr *in = d.out, *out = d.in;
+  utils::Optional<size_t> peel = deps.determinePeelDepth(L, did);
+  if (peel) peelFlag |= (1 << (*peel));
+
+  if (d.revTimeEdge()) {
+    bool reassociable = in->reassociableReductionPair() != out;
+    if (reassociable) ++unordered_reduction_count;
+    if (!reassociable) ++ordered_reduction_count;
+    return reorderable = reassociable || peel;
+  }
+  return reorderable = peel.hasValue();
 };
 
 class IROptimizer {
@@ -920,3 +942,13 @@ out << "}\n";
 //   [[no_unique_address]] Arena<> *allocator;
 // };
 } // namespace poly::CostModeling
+
+namespace IR {
+
+inline void Loop::setLegality(CostModeling::LoopDepSatisfaction &deps) {
+  for (int32_t did : deps.dependencyIDs(this))
+    if (!legality.update(deps.deps, this, did)) break;
+}
+
+} // namespace IR
+} // namespace poly

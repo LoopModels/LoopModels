@@ -290,11 +290,9 @@ static_assert(sizeof(Node) == 4 * sizeof(Node *) + 8);
 class Loop : public Node {
   poly::Loop *affineLoop{nullptr};
   Node *last{nullptr};
-  /// loopMeta's leading 2 bits give `LegalTransforms`
-  /// remaining 30 bits give an ID to the loop.
   /// IDs are in topologically sorted order.
   CostModeling::Legality legality{};
-  int32_t edgeId{-1};
+  int32_t edgeId{-1}; // edge cycle id
   // LegalTransforms legal{Unknown};
   // while `child` points to the first contained instruction,
   // `last` points to the last contained instruction,
@@ -374,11 +372,9 @@ public:
     return L;
   }
   constexpr auto getLegality() -> CostModeling::Legality { return legality; }
-  inline void setLegality(CostModeling::LoopDepSatisfaction &deps) {
-    for (int32_t did : deps.dependencyIDs(this))
-      if (!legality.update(deps.deps, this, did)) break;
-  }
+  inline void setLegality(CostModeling::LoopDepSatisfaction &deps);
 };
+
 [[nodiscard]] inline constexpr auto Node::getLoop() const noexcept -> Loop * {
   if (!parent || (parent->kind != VK_Loop)) return nullptr;
   return static_cast<Loop *>(parent);
