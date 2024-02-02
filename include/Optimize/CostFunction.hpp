@@ -565,24 +565,18 @@ class LoopTreeCostFn {
     if (SL) iterLoopLevel(deps, SL, maxl2VF, TTI, ++depth, exitCount);
     else leafCosts(deps, L, maxl2VF, TTI);
   }
-  // checks a loop for legality of vectorization and unrolling
-  void checkLegality(LoopDepSatisfaction deps, IR::Loop *L) {
-    bool canVectorize = true, canUnroll = true;
-    for (poly::Dependence d : deps.depencencies(L)) {
-      // analyze d
-      canVectorize = false;
-    }
-  }
-
   void leafCosts(LoopDepSatisfaction deps, IR::Loop *L, unsigned maxl2VF,
                  const llvm::TargetTransformInfo &TTI) {
     // TODO: if (!SL) we're in a leaf, and need compute latency
     // We use the `IROptimizer::loopDepSats` to check the depencencies held at
     // the loop. We check these for those that look like reductions that are
-    // legal to reassociate, e.g. integer add chains or floating point with the
-    // reassociate FMF set. We can also calculate the latency while walking the
-    // chain. Note that in our IR, dependencies may look something like this
-    // after load/store hoisting: for (j in J){ // arbitrary number of outer
+    // legal to reassociate (we check this earlier and set
+    // `in->reassociableReductionPair()==out`), e.g. integer add chains or
+    // floating point with the reassociate FMF set.
+    // TODO: cache the latency while walking the chain, then look it up here.
+    // Note that in our IR, dependencies may look something like this
+    // after load/store hoisting:
+    // for (j in J){ // arbitrary number of outer
     // loops
     //   %w = %array[j...];
     //   %x = foo(%w);

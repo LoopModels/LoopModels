@@ -850,6 +850,7 @@ constexpr auto find(Addr *src, Compute *dst) -> bool {
   });
 }
 // from dst, search through operands for `src`
+// TODO: accumulate latency as we go!
 // NOLINTNEXTLINE misc-no-recursion
 constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
   invariant(src->isLoad());
