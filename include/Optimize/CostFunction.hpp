@@ -209,8 +209,8 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary orth,
 
 // We need to define an unroll ordering.
 struct RegisterUseByUnroll {
-  math::PtrVector<std::array<uint32_t, 2>> masks; // coef, mask pairs
-  unsigned register_count;                        // includes constant offset
+  math::Vector<std::array<uint32_t, 2>> masks{}; // coef, mask pairs
+  unsigned register_count;                       // includes constant offset
   [[nodiscard]] constexpr auto begin() const
     -> const std::array<uint32_t, 2> * {
     return masks.begin();
@@ -235,27 +235,46 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
   return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
 
-auto memcosts(
-  const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
-  math::PtrVector<Pair<MemCostSummary, IR::Addr::Costs>> orth_axes) {
+inline auto registerUse(const llvm::TargetTransformInfo &TTI, IR::Loop *L)
+  -> RegisterUseByUnroll {
+  RegisterUseByUnroll u;
+  // Ideally, we'd have the transitive closure of depencencies, or better yet
+  // top-sorted IDs for quick checks on relative order w/ respect to the current
+  // top-sorting.
+  // E.g. ID_x < ID_y proves it is legal for ID_x to be first, but does not
+  // prove the opposite is illegal. The weak proof may often be enough. "better
+  // yet" is because the check is very efficient, not because it is powerful.
+  // For a somewhat-efficient check of the former variety, we'd probably want
+  // to use `BitSet`s + canonical ID-values (not position-based) for each
+  // `Value`, which is something we could do if switching to a more
+  // data-oriented design.
+  // The simple top-index check is enough for checking if something is infront,
+  // behind, or within a loop.
+  return u;
+}
+
+inline auto
+memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+         math::PtrVector<Pair<MemCostSummary, IR::Addr::Costs>> orth_axes) {
   utils::eltype_t<decltype(invunrolls)> ic{};
   for (auto [oa, mc] : orth_axes) ic += cost(invunrolls, oa, mc, vf);
   return ic;
 }
-auto memcosts(
-  const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
-  math::PtrVector<std::tuple<MemCostSummary, DensePtrMatrix<int64_t>>>
-    orth_axes) {
+inline auto
+memcosts(const AbstractMatrix auto &invunrolls, VectorizationFactor vf,
+         math::PtrVector<std::tuple<MemCostSummary, DensePtrMatrix<int64_t>>>
+           orth_axes) {
   utils::eltype_t<decltype(invunrolls)> ic{};
   for (auto [oa, inds] : orth_axes) ic += cost(invunrolls, oa, vf, inds);
   return ic;
 }
-auto compcosts(const AbstractMatrix auto &invunrolls,
-               math::PtrVector<std::array<uint32_t, 2>> compindep) {
+inline auto compcosts(const AbstractMatrix auto &invunrolls,
+                      math::PtrVector<std::array<uint32_t, 2>> compindep) {
   utils::eltype_t<decltype(invunrolls)> cc{};
   for (auto [oa, sf] : compindep) cc += cost(invunrolls, oa) * sf;
   return cc;
 }
+
 // We then additionally need a throughput vs latency estimator, and code for
 // handling the tail.
 // Standard throughput is fairly trivial/should be a vector sum,
@@ -616,7 +635,7 @@ class LoopTreeCostFn {
     // breadth-first lets us retire early, but can increase
     // live count?
     // Note, every reduction must add register contribution.
-    leafs.emplace_back(regUse, {l, legality.numReductions()});
+    leafs.emplace_back(registerUse(TTI, L), {l, legality.numReductions()});
     // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
     return;
   };

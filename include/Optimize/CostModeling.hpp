@@ -409,30 +409,27 @@ inline void topologicalSort(const IR::Dependencies &deps, IR::Loop *root,
 }
 // NOLINTNEXTLINE(misc-no-recursion)
 inline auto buildSubGraph(const IR::Dependencies &deps, IR::Loop *root,
-                          int depth, uint32_t id) -> uint32_t {
+                          int depth) -> int16_t {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
   for (IR::Loop *child : root->subLoops())
-    id = buildSubGraph(deps, child, depth + 1, id);
-  // root->setMeta(id++);
-
+    buildSubGraph(deps, child, depth + 1);
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
   topologicalSort(deps, root, depth);
-  return id;
+  return idx;
 }
-inline auto buildGraph(const IR::Dependencies &deps, IR::Loop *root)
-  -> uint32_t {
+inline void buildGraph(const IR::Dependencies &deps, IR::Loop *root) {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
-  uint32_t id = 0;
-  for (IR::Loop *child : root->subLoops())
-    id = buildSubGraph(deps, child, 1, id);
+  for (IR::Loop *child : root->subLoops()) buildSubGraph(deps, child, 1);
 
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
   addBody(deps, root, 0, root->getChild());
-  return id;
+  // Add top sort idx
+  uint32_t idx = 0; // we use ++idx, so only `const` have idx==0
+  for (IR::Node *n : root->nodes()) n->setTopIndex(++idx);
 }
 
 inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
@@ -718,8 +715,7 @@ public:
   IROptimizer(IR::Dependencies &deps, IR::Cache &instr,
               dict::set<llvm::BasicBlock *> &loopBBs,
               dict::set<llvm::CallBase *> &eraseCandidates_, IR::Loop *root,
-              Arena<> *lalloc, lp::LoopBlock::OptimizationResult res,
-              uint32_t numLoops)
+              Arena<> *lalloc, lp::LoopBlock::OptimizationResult res)
     : deps{deps}, instructions{instr}, LBBs{loopBBs},
       eraseCandidates{eraseCandidates_}, root_{root}, lalloc_{lalloc} {
     sortEdges(root_, 0);
@@ -871,12 +867,11 @@ inline void optimize(IR::Dependencies deps, IR::Cache &instr,
   // as it allocates the actual nodes.
 
   IR::Loop *root = addAddrToGraph(instr.getAllocator(), lalloc, res.nodes);
-  uint32_t numLoops = buildGraph(deps, root);
+  buildGraph(deps, root);
   // `N` is the head of the topologically sorted graph
   // We now try to remove redundant memory operations
 
-  IROptimizer(deps, instr, loopBBs, eraseCandidates, root, lalloc, res,
-              numLoops);
+  IROptimizer(deps, instr, loopBBs, eraseCandidates, root, lalloc, res);
 }
 
 /*

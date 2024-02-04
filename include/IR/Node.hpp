@@ -124,10 +124,7 @@ protected:
   uint8_t visitDepth{255};
   uint8_t maxDepth; // memory allocated to support up to this depth
   bool dependsOnParentLoop_{false};
-  // 7 bytes; we have 1 left!
-  // uint16_t index_;
-  // uint16_t lowLink_;
-  // uint16_t bitfield;
+  uint16_t topologicalIndex{0};
 
   constexpr Node(ValKind kind_) : kind(kind_) {}
   constexpr Node(ValKind kind_, unsigned depth)
@@ -162,7 +159,14 @@ public:
   [[nodiscard]] constexpr auto sameBlock(const Node *other) const -> bool {
     return other && other->parent == parent && other->child == child;
   }
-
+  constexpr void setTopIndex(uint16_t idx) { topologicalIndex = idx; }
+  constexpr auto getTopIndex() const -> uint16_t { return topologicalIndex; }
+  constexpr auto isAfter(Node *v) const -> bool {
+    return topologicalIndex > v->getTopIndex();
+  }
+  constexpr auto isBefore(Node *v) const -> bool {
+    return topologicalIndex < v->getTopIndex();
+  }
   // [[nodiscard]] constexpr auto wasVisited() const -> bool {
   //   return bitfield & 0x1;
   // }
