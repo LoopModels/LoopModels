@@ -888,6 +888,17 @@ constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
   }
   return foundflag;
 }
+
+inline auto Addr::reductionLatency(const llvm::TargetTransformInfo &TTI,
+                                   unsigned vectorWidth)
+  -> llvm::InstructionCost::CostType {
+  llvm::InstructionCost::CostType latency{0};
+  for (Instruction *d = getReductionDst(); d; d = d->getReductionDst())
+    if (Compute *c = llvm::dyn_cast<Compute>(d))
+      latency += c->calcCost(TTI, vectorWidth).latency;
+  return latency;
+}
+
 } // namespace poly::IR
 
 [[nodiscard]] inline auto

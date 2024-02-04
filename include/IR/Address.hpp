@@ -16,9 +16,11 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
+#include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/PatternMatch.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/Support/InstructionCost.h>
 
 namespace poly {
 namespace lp {
@@ -643,6 +645,9 @@ public:
     if (std::optional<double> o = scalar.getValue()) dc = *o;
     return {dc, dd, ds};
   }
+  inline auto reductionLatency(const llvm::TargetTransformInfo &TTI,
+                               unsigned vectorWidth)
+    -> llvm::InstructionCost::CostType;
 
   /// drop `this` and remove it from `Dependencies`
   inline void drop(Dependencies &);

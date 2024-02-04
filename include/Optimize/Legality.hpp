@@ -182,6 +182,13 @@ public:
   //   });
   // }
   auto update(poly::Dependencies &deps, IR::Loop *L, int32_t did) -> bool;
+  constexpr auto numReductions() const -> uint16_t {
+    uint16_t numReduct;
+    if (__builtin_add_overflow(ordered_reduction_count,
+                               unordered_reduction_count, &numReduct))
+      return std::numeric_limits<uint16_t>::max();
+    return numReduct;
+  }
 };
 static_assert(sizeof(Legality) == 8);
 } // namespace CostModeling

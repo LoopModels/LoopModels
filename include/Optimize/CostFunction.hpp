@@ -15,7 +15,10 @@
 #include <Math/GreatestCommonDivisor.hpp>
 #include <Math/Math.hpp>
 #include <Math/Matrix.hpp>
+#include <cstdint>
+#include <limits>
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/Support/InstructionCost.h>
 namespace poly::CostModeling {
 using containers::Pair;
 using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
@@ -598,11 +601,22 @@ class LoopTreeCostFn {
     // }
     // Rather than using PhiNodes, we represent dependencies through addresses.
     // we can get legality from the loop.
-    CostModeling::Legality legality = L->getLegality();
+    // The tricker thing to compute here is register pressure
+    llvm::InstructionCost::CostType latency{0};
     for (poly::Dependence d : deps.depencencies(L)) {
-      IR::Addr *in = d.input(), *out=d.output();
       // instruction latency can be a function of vector width
+      latency =
+        std::max(latency, d.input()->reductionLatency(TTI, maxVectorWidth));
     }
+    CostModeling::Legality legality = L->getLegality();
+    uint16_t l = std::numeric_limits<uint16_t>::max();
+    if (l > latency) l = latency;
+    // for reg use, lets add register dep flag
+    // what kind of traversal would minimize width?
+    // breadth-first lets us retire early, but can increase
+    // live count?
+    // Note, every reduction must add register contribution.
+    leafs.emplace_back(regUse, {l, legality.numReductions()});
     // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
     return;
   };
