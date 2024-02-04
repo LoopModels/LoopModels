@@ -941,7 +941,7 @@ out << "}\n";
 // class LoopForestSchedule : LoopTreeSchedule {
 //   [[no_unique_address]] Arena<> *allocator;
 // };
-} // namespace poly::CostModeling
+} // namespace CostModeling
 
 namespace IR {
 

@@ -475,6 +475,7 @@ protected:
   constexpr Instruction(ValKind kind_, unsigned curDepth, unsigned natDepth,
                         unsigned maxDepth_)
     : Value(kind_, curDepth, natDepth, maxDepth_) {}
+  Instruction *reductionDst{nullptr};
 
 public:
   static constexpr auto classof(const Node *v) -> bool {
@@ -489,6 +490,10 @@ public:
   // declarations
   [[nodiscard]] auto getIdentifier() const -> Identifier;
   inline void setOperands(Arena<> *alloc, math::PtrVector<Value *>);
+  constexpr void linkReductionDst(Instruction *op) { reductionDst = op; }
+  constexpr auto getReductionDst() const -> Instruction * {
+    return reductionDst;
+  }
 };
 static_assert(std::is_copy_assignable_v<Instruction::Identifier>);
 

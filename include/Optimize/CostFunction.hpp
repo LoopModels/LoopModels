@@ -5,6 +5,7 @@
 #include "IR/Node.hpp"
 #include "IR/OrthogonalAxes.hpp"
 #include "Optimize/CostModeling.hpp"
+#include "Optimize/RegisterFile.hpp"
 #include "Polyhedra/Dependence.hpp"
 #include <Containers/BitSets.hpp>
 #include <Containers/Pair.hpp>
@@ -14,6 +15,7 @@
 #include <Math/GreatestCommonDivisor.hpp>
 #include <Math/Math.hpp>
 #include <Math/Matrix.hpp>
+#include <llvm/IR/LLVMContext.h>
 namespace poly::CostModeling {
 using containers::Pair;
 using math::AbstractVector, math::AbstractMatrix, math::DensePtrMatrix, math::_;
@@ -258,6 +260,7 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 // in which case unrolling the loops they don't depend on will help.
 // Thus, it would probably be best to handle these with code
 // similar to the memory cost-fun above, ideally we can abstract away the core.
+//
 /// memcost = I*J*(Ui*Uj*C_{Al} + Uj*C_{yl}) / (Ui*Uj) +
 ///    I*(C_{xl}*Ui + C_{xs}*Ui) / Ui
 /// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) /
@@ -265,6 +268,7 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 ///    I*C_{l,add}*log2(Uj)
 ///
 /// Here, we define a cost fn that can be optimized to produce
+///
 /// vectorization and unrolling factors.
 /// We assemble all addrs into a vector, sorted by depth first traversal order
 /// of the loop tree, e.g.
@@ -465,10 +469,15 @@ auto compcosts(const AbstractMatrix auto &invunrolls,
 ///
 /// ///
 class LoopTreeCostFn {
+  // counts per loop, indicating how many of each of the following three fields
   math::Vector<LoopCostCounts> cost_counts{};
+  // orthogonal axes and costs
   math::Vector<MemCostSummary> orth_axes{};
+  // non-orthogonal axes and costs
   math::Vector<Pair<MemCostSummary, DensePtrMatrix<int64_t>>> conv_axes{};
+  // compute cost summary
   math::Vector<Pair<float, uint32_t>> compute_independence{};
+  // for leaves, we need latency information
   math::Vector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs{};
   unsigned maxVectorWidth;
   ptrdiff_t max_depth{};
@@ -573,9 +582,10 @@ class LoopTreeCostFn {
     // legal to reassociate (we check this earlier and set
     // `in->reassociableReductionPair()==out`), e.g. integer add chains or
     // floating point with the reassociate FMF set.
-    // TODO: cache the latency while walking the chain, then look it up here.
-    // Note that in our IR, dependencies may look something like this
-    // after load/store hoisting:
+    // When we have reductions, we have src->dst chains stored through
+    // `linkReductionDst()` that can be used for accumulating latencies.
+    // FIXME (maybe): Current implementation only allows each instruction to be
+    // a part of 1 chain.
     // for (j in J){ // arbitrary number of outer
     // loops
     //   %w = %array[j...];
@@ -587,9 +597,11 @@ class LoopTreeCostFn {
     //   %array[j...] = %z;
     // }
     // Rather than using PhiNodes, we represent dependencies through addresses.
-    bool vectorizationLegal = true, unrollLegal = true;
+    // we can get legality from the loop.
+    CostModeling::Legality legality = L->getLegality();
     for (poly::Dependence d : deps.depencencies(L)) {
-      // is
+      IR::Addr *in = d.input(), *out=d.output();
+      // instruction latency can be a function of vector width
     }
     // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
     return;
@@ -673,14 +685,15 @@ public:
     return c;
   }
   void init(LoopDepSatisfaction deps, IR::Loop *root, unsigned maxl2VF,
-            const llvm::TargetTransformInfo &TTI) {
+            llvm::LLVMContext &C, const llvm::TargetTransformInfo &TTI) {
     clear(); // max_depth = 0;
+    maxVectorWidth = RegisterFile::estimateMaximumVectorWidth(C, TTI);
     iterLoopLevel(deps, root->getSubLoop(), maxl2VF, TTI, 0, 0);
   }
   LoopTreeCostFn(LoopDepSatisfaction deps, IR::Loop *root, unsigned maxVF,
-                 const llvm::TargetTransformInfo &TTI)
+                 llvm::LLVMContext &C, const llvm::TargetTransformInfo &TTI)
     : maxVectorWidth{unsigned(1) << maxVF} {
-    init(deps, root, maxVF, TTI);
+    init(deps, root, maxVF, C, TTI);
   }
 };
 

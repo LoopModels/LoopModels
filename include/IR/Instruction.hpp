@@ -259,8 +259,6 @@ public:
     return true;
   }
 
-  /// fall back in case we need value operand
-  // [[nodiscard]] auto isValue() const -> bool { return id.isValue(); }
   auto getCost(const llvm::TargetTransformInfo &TTI, VectorWidth W)
     -> RecipThroughputLatency {
     RecipThroughputLatency c = costs[W];
@@ -841,16 +839,25 @@ inline void Instruction::setOperands(Arena<> *alloc,
 // llvm::Intrinsic::IndependentIntrinsics x = llvm::Intrinsic::sqrt;
 // llvm::Intrinsic::IndependentIntrinsics y = llvm::Intrinsic::sin;
 
+constexpr auto findComp(Addr *src, Compute *dst) -> bool;
+// NOLINTNEXTLINE misc-no-recursion
+constexpr auto find(Addr *src, Value *op) {
+  auto *c = llvm::dyn_cast<IR::Compute>(op);
+  return c && findComp(src, c);
+}
+
 /// Defined here, because we're using `Compute`
-constexpr auto find(Addr *src, Compute *dst) -> bool {
+// NOLINTNEXTLINE misc-no-recursion
+constexpr auto findComp(Addr *src, Compute *dst) -> bool {
   return std::ranges::any_of(dst->getOperands(), [=](Value *op) -> bool {
-    if (op == src) return true;
-    if (auto *c = llvm::dyn_cast<IR::Compute>(op)) return find(src, c);
-    return false;
+    if (op != src && !find(src, op)) return false;
+    static_cast<Instruction *>(op)->linkReductionDst(dst);
+    return true;
   });
 }
 // from dst, search through operands for `src`
 // TODO: accumulate latency as we go!
+// Maybe store visited, to avoid potentially revisiting?
 // NOLINTNEXTLINE misc-no-recursion
 constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
   invariant(src->isLoad());
@@ -860,10 +867,22 @@ constexpr auto findThroughReassociable(Addr *src, Compute *dst) -> unsigned {
   unsigned foundflag = 0;
   for (Value *op : dst->getOperands()) {
     auto *c = llvm::dyn_cast<IR::Compute>(op);
-    if (reassociable & 1)
-      if (op == src) foundflag |= 1;
-      else foundflag |= findThroughReassociable(src, c);
-    else if ((op == src) || (c && find(src, c))) return 0x2;
+    bool found{false};
+    if (reassociable & 1) {
+      if (op == src) {
+        foundflag |= 1;
+        found = true;
+      } else if (c) {
+        unsigned f = findThroughReassociable(src, c);
+        if (!f) continue;
+        foundflag |= f;
+        found = true;
+      }
+    } else if ((op == src) || (c && findComp(src, c))) {
+      found = true;
+      foundflag = 0x2;
+    }
+    if (found) static_cast<Instruction *>(op)->linkReductionDst(dst);
     if (foundflag & 2) return 0x2;
     reassociable >>= 1;
   }

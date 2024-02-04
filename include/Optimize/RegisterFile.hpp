@@ -5,6 +5,26 @@
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/IR/DerivedTypes.h>
 
+namespace poly::RegisterFile {
+// returns vector width in bytes, ignoring mprefer-vector-width
+inline auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
+                                       const llvm::TargetTransformInfo &TTI)
+  -> uint8_t {
+  uint8_t twiceMaxVectorWidth = 2;
+  auto *f32 = llvm::Type::getFloatTy(C);
+  llvm::InstructionCost prevCost = TTI.getArithmeticInstrCost(
+    llvm::Instruction::FAdd,
+    llvm::FixedVectorType::get(f32, twiceMaxVectorWidth));
+  while (true) {
+    llvm::InstructionCost nextCost = TTI.getArithmeticInstrCost(
+      llvm::Instruction::FAdd,
+      llvm::FixedVectorType::get(f32, twiceMaxVectorWidth *= 2));
+    if (nextCost > prevCost) break;
+    prevCost = nextCost;
+  }
+  return 2 * twiceMaxVectorWidth;
+}
+
 class CPURegisterFile {
   uint8_t maximumVectorWidth;
   uint8_t numVectorRegisters;
@@ -35,24 +55,6 @@ class CPURegisterFile {
     if (hasAVX512(C, TTI)) return 7; // 7, because k0 is reserved for unmasked
     return 0;
   }
-  // returns vector width in bytes, ignoring mprefer-vector-width
-  static auto estimateMaximumVectorWidth(llvm::LLVMContext &C,
-                                         const llvm::TargetTransformInfo &TTI)
-    -> uint8_t {
-    uint8_t twiceMaxVectorWidth = 2;
-    auto *f32 = llvm::Type::getFloatTy(C);
-    llvm::InstructionCost prevCost = TTI.getArithmeticInstrCost(
-      llvm::Instruction::FAdd,
-      llvm::FixedVectorType::get(f32, twiceMaxVectorWidth));
-    while (true) {
-      llvm::InstructionCost nextCost = TTI.getArithmeticInstrCost(
-        llvm::Instruction::FAdd,
-        llvm::FixedVectorType::get(f32, twiceMaxVectorWidth *= 2));
-      if (nextCost > prevCost) break;
-      prevCost = nextCost;
-    }
-    return 2 * twiceMaxVectorWidth;
-  }
 
 public:
   CPURegisterFile(llvm::LLVMContext &C, const llvm::TargetTransformInfo &TTI) {
@@ -75,4 +77,5 @@ public:
   }
 };
 
+} // namespace poly::RegisterFile
 #endif // RegisterFile_hpp_INCLUDED
