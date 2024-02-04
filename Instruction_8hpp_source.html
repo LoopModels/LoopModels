@@ -954,32 +954,43 @@ $(function() {
 <div class="line"><a name="l00888"></a><span class="lineno">  888</span>&#160;  }</div>
 <div class="line"><a name="l00889"></a><span class="lineno">  889</span>&#160;  <span class="keywordflow">return</span> foundflag;</div>
 <div class="line"><a name="l00890"></a><span class="lineno">  890</span>&#160;}</div>
-<div class="line"><a name="l00891"></a><span class="lineno">  891</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
-<div class="line"><a name="l00892"></a><span class="lineno">  892</span>&#160; </div>
-<div class="line"><a name="l00893"></a><span class="lineno">  893</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
-<div class="line"><a name="l00894"></a><span class="lineno">  894</span>&#160;ankerl::unordered_dense::hash&lt;poly::IR::InstByValue&gt;::operator()(</div>
-<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1InstByValue.html">poly::IR::InstByValue</a> <span class="keyword">const</span> &amp;x) <span class="keyword">const</span> noexcept -&gt; uint64_t {</div>
-<div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160;  <span class="keyword">using</span> poly::Hash::combineHash, poly::Hash::getHash, poly::containers::UList,</div>
-<div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a>;</div>
-<div class="line"><a name="l00898"></a><span class="lineno">  898</span>&#160;  uint64_t seed = getHash(x.inst-&gt;getKind());</div>
-<div class="line"><a name="l00899"></a><span class="lineno">  899</span>&#160;  seed = combineHash(seed, getHash(x.inst-&gt;getType()));</div>
-<div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;  seed = combineHash(seed, getHash(x.inst-&gt;getOpId()));</div>
-<div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160;  <span class="keywordflow">if</span> (x.inst-&gt;isIncomplete())</div>
-<div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;    <span class="keywordflow">return</span> combineHash(seed, getHash(x.inst-&gt;getLLVMInstruction()));</div>
-<div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160;  uint8_t assocFlag = x.inst-&gt;commuatativeOperandsFlag();</div>
-<div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;  <span class="comment">// combine all operands</span></div>
-<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;  <span class="keywordtype">size_t</span> offset = 0;</div>
-<div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160;  poly::PtrVector&lt;Value *&gt; operands = x.inst-&gt;getOperands();</div>
-<div class="line"><a name="l00907"></a><span class="lineno">  907</span>&#160;  <span class="keywordflow">if</span> (assocFlag) {</div>
-<div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;    poly::invariant(assocFlag, uint8_t(3));</div>
-<div class="line"><a name="l00909"></a><span class="lineno">  909</span>&#160;    <span class="comment">// we combine hashes in a commutative way</span></div>
-<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;    seed = combineHash(seed, getHash(operands[0]) + getHash(operands[1]));</div>
-<div class="line"><a name="l00911"></a><span class="lineno">  911</span>&#160;    offset = 2;</div>
-<div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160;  }</div>
-<div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> B = operands.begin() + offset, E = operands.end(); B != E; ++B)</div>
-<div class="line"><a name="l00914"></a><span class="lineno">  914</span>&#160;    seed = combineHash(seed, getHash(*B));</div>
-<div class="line"><a name="l00915"></a><span class="lineno">  915</span>&#160;  <span class="keywordflow">return</span> seed;</div>
-<div class="line"><a name="l00916"></a><span class="lineno">  916</span>&#160;}</div>
+<div class="line"><a name="l00891"></a><span class="lineno">  891</span>&#160; </div>
+<div class="line"><a name="l00892"></a><span class="lineno">  892</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> Addr::reductionLatency(<span class="keyword">const</span> llvm::TargetTransformInfo &amp;TTI,</div>
+<div class="line"><a name="l00893"></a><span class="lineno">  893</span>&#160;                                   <span class="keywordtype">unsigned</span> vectorWidth)</div>
+<div class="line"><a name="l00894"></a><span class="lineno">  894</span>&#160;  -&gt; llvm::InstructionCost::CostType {</div>
+<div class="line"><a name="l00895"></a><span class="lineno">  895</span>&#160;  llvm::InstructionCost::CostType latency{0};</div>
+<div class="line"><a name="l00896"></a><span class="lineno">  896</span>&#160;  <span class="keywordflow">for</span> (<a class="code" href="classpoly_1_1IR_1_1Instruction.html#a854f54fcbcec590e7bfa1c65100969e3">Instruction</a> *d = getReductionDst(); d; d = d-&gt;getReductionDst())</div>
+<div class="line"><a name="l00897"></a><span class="lineno">  897</span>&#160;    <span class="keywordflow">if</span> (Compute *c = llvm::dyn_cast&lt;Compute&gt;(d))</div>
+<div class="line"><a name="l00898"></a><span class="lineno">  898</span>&#160;      latency += c-&gt;calcCost(TTI, vectorWidth).latency;</div>
+<div class="line"><a name="l00899"></a><span class="lineno">  899</span>&#160;  <span class="keywordflow">return</span> latency;</div>
+<div class="line"><a name="l00900"></a><span class="lineno">  900</span>&#160;}</div>
+<div class="line"><a name="l00901"></a><span class="lineno">  901</span>&#160; </div>
+<div class="line"><a name="l00902"></a><span class="lineno">  902</span>&#160;} <span class="comment">// namespace poly::IR</span></div>
+<div class="line"><a name="l00903"></a><span class="lineno">  903</span>&#160; </div>
+<div class="line"><a name="l00904"></a><span class="lineno">  904</span>&#160;[[nodiscard]] <span class="keyword">inline</span> <span class="keyword">auto</span></div>
+<div class="line"><a name="l00905"></a><span class="lineno">  905</span>&#160;ankerl::unordered_dense::hash&lt;poly::IR::InstByValue&gt;::operator()(</div>
+<div class="line"><a name="l00906"></a><span class="lineno">  906</span>&#160;  <a class="code" href="structpoly_1_1IR_1_1InstByValue.html">poly::IR::InstByValue</a> <span class="keyword">const</span> &amp;x) <span class="keyword">const</span> noexcept -&gt; uint64_t {</div>
+<div class="line"><a name="l00907"></a><span class="lineno">  907</span>&#160;  <span class="keyword">using</span> poly::Hash::combineHash, poly::Hash::getHash, poly::containers::UList,</div>
+<div class="line"><a name="l00908"></a><span class="lineno">  908</span>&#160;    <a class="code" href="classpoly_1_1IR_1_1Value.html">poly::IR::Value</a>;</div>
+<div class="line"><a name="l00909"></a><span class="lineno">  909</span>&#160;  uint64_t seed = getHash(x.inst-&gt;getKind());</div>
+<div class="line"><a name="l00910"></a><span class="lineno">  910</span>&#160;  seed = combineHash(seed, getHash(x.inst-&gt;getType()));</div>
+<div class="line"><a name="l00911"></a><span class="lineno">  911</span>&#160;  seed = combineHash(seed, getHash(x.inst-&gt;getOpId()));</div>
+<div class="line"><a name="l00912"></a><span class="lineno">  912</span>&#160;  <span class="keywordflow">if</span> (x.inst-&gt;isIncomplete())</div>
+<div class="line"><a name="l00913"></a><span class="lineno">  913</span>&#160;    <span class="keywordflow">return</span> combineHash(seed, getHash(x.inst-&gt;getLLVMInstruction()));</div>
+<div class="line"><a name="l00914"></a><span class="lineno">  914</span>&#160;  uint8_t assocFlag = x.inst-&gt;commuatativeOperandsFlag();</div>
+<div class="line"><a name="l00915"></a><span class="lineno">  915</span>&#160;  <span class="comment">// combine all operands</span></div>
+<div class="line"><a name="l00916"></a><span class="lineno">  916</span>&#160;  <span class="keywordtype">size_t</span> offset = 0;</div>
+<div class="line"><a name="l00917"></a><span class="lineno">  917</span>&#160;  poly::PtrVector&lt;Value *&gt; operands = x.inst-&gt;getOperands();</div>
+<div class="line"><a name="l00918"></a><span class="lineno">  918</span>&#160;  <span class="keywordflow">if</span> (assocFlag) {</div>
+<div class="line"><a name="l00919"></a><span class="lineno">  919</span>&#160;    poly::invariant(assocFlag, uint8_t(3));</div>
+<div class="line"><a name="l00920"></a><span class="lineno">  920</span>&#160;    <span class="comment">// we combine hashes in a commutative way</span></div>
+<div class="line"><a name="l00921"></a><span class="lineno">  921</span>&#160;    seed = combineHash(seed, getHash(operands[0]) + getHash(operands[1]));</div>
+<div class="line"><a name="l00922"></a><span class="lineno">  922</span>&#160;    offset = 2;</div>
+<div class="line"><a name="l00923"></a><span class="lineno">  923</span>&#160;  }</div>
+<div class="line"><a name="l00924"></a><span class="lineno">  924</span>&#160;  <span class="keywordflow">for</span> (<span class="keyword">auto</span> B = operands.begin() + offset, E = operands.end(); B != E; ++B)</div>
+<div class="line"><a name="l00925"></a><span class="lineno">  925</span>&#160;    seed = combineHash(seed, getHash(*B));</div>
+<div class="line"><a name="l00926"></a><span class="lineno">  926</span>&#160;  <span class="keywordflow">return</span> seed;</div>
+<div class="line"><a name="l00927"></a><span class="lineno">  927</span>&#160;}</div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1CVal_html"><div class="ttname"><a href="classpoly_1_1IR_1_1CVal.html">poly::IR::CVal</a></div><div class="ttdef"><b>Definition:</b> Node.hpp:502</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Call_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Call.html">poly::IR::Call</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:639</div></div>
 <div class="ttc" id="aclasspoly_1_1IR_1_1Compute_html"><div class="ttname"><a href="classpoly_1_1IR_1_1Compute.html">poly::IR::Compute</a></div><div class="ttdef"><b>Definition:</b> Instruction.hpp:69</div></div>
