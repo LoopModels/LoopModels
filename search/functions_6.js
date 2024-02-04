@@ -7,7 +7,7 @@ var searchData=
   ['insertahead_353',['insertAhead',['../classpoly_1_1IR_1_1Node.html#a1b04b2bdc393d7b72ace4c27e758fbde',1,'poly::IR::Node']]],
   ['instruction_354',['Instruction',['../classpoly_1_1IR_1_1Instruction.html#a854f54fcbcec590e7bfa1c65100969e3',1,'poly::IR::Instruction']]],
   ['intersectionisempty_355',['intersectionIsEmpty',['../structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610',1,'poly::IR::Predicate::Set']]],
-  ['iroptimizer_356',['IROptimizer',['../classpoly_1_1CostModeling_1_1IROptimizer.html#ac92f8018853e4ef420468809f2a2f175',1,'poly::CostModeling::IROptimizer']]],
+  ['iroptimizer_356',['IROptimizer',['../classpoly_1_1CostModeling_1_1IROptimizer.html#a56d5f5d6cf0bdc48ca6aa962e607b448',1,'poly::CostModeling::IROptimizer']]],
   ['isactive_357',['isActive',['../structpoly_1_1poly_1_1Dependence.html#a40cd4a879088dff13f540603c4527859',1,'poly::poly::Dependence']]],
   ['iscondindep_358',['isCondIndep',['../structpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1',1,'poly::poly::Dependence']]],
   ['isforward_359',['isForward',['../structpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65',1,'poly::poly::Dependence']]],

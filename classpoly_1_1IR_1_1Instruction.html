@@ -204,6 +204,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnPa
 <tr class="memitem:adda0d923ff0a84becea11d5caddff0c9 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="adda0d923ff0a84becea11d5caddff0c9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>sameBlock</b> (const <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *other) const -&gt; bool</td></tr>
 <tr class="separator:adda0d923ff0a84becea11d5caddff0c9 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a55cb8d87d76a3ab947ad29088dc8984e inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a55cb8d87d76a3ab947ad29088dc8984e"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setTopIndex</b> (uint16_t idx)</td></tr>
+<tr class="separator:a55cb8d87d76a3ab947ad29088dc8984e inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab9ae6bb99241b6ed3262f88386c4413c inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ab9ae6bb99241b6ed3262f88386c4413c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getTopIndex</b> () const -&gt; uint16_t</td></tr>
+<tr class="separator:ab9ae6bb99241b6ed3262f88386c4413c inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2bcf4ac8d8ffc2f2df039024bf6e023 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ab2bcf4ac8d8ffc2f2df039024bf6e023"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isAfter</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) const -&gt; bool</td></tr>
+<tr class="separator:ab2bcf4ac8d8ffc2f2df039024bf6e023 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc6ee7eb9b6d2df8ae040bf7bde2b03a inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="adc6ee7eb9b6d2df8ae040bf7bde2b03a"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isBefore</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *v) const -&gt; bool</td></tr>
+<tr class="separator:adc6ee7eb9b6d2df8ae040bf7bde2b03a inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2db9f684321389aa69abcf4f0d26979f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a2db9f684321389aa69abcf4f0d26979f"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getKind</b> () const -&gt; ValKind</td></tr>
 <tr class="separator:a2db9f684321389aa69abcf4f0d26979f inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -358,6 +370,9 @@ uint8_t&#160;</td><td class="memItemRight" valign="bottom"><b>maxDepth</b></td><
 <tr class="memitem:aedb6a87db89f84d2a25e5b6a09f34eed inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="aedb6a87db89f84d2a25e5b6a09f34eed"></a>
 bool&#160;</td><td class="memItemRight" valign="bottom"><b>dependsOnParentLoop_</b> {false}</td></tr>
 <tr class="separator:aedb6a87db89f84d2a25e5b6a09f34eed inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a88235ecc8417569b9a52620de6618621 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a88235ecc8417569b9a52620de6618621"></a>
+uint16_t&#160;</td><td class="memItemRight" valign="bottom"><b>topologicalIndex</b> {0}</td></tr>
+<tr class="separator:a88235ecc8417569b9a52620de6618621 inherit pro_attribs_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
