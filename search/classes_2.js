@@ -10,6 +10,6 @@ var searchData=
   ['compute_225',['Compute',['../classpoly_1_1IR_1_1Compute.html',1,'poly::IR']]],
   ['costs_226',['Costs',['../structpoly_1_1IR_1_1Addr_1_1Costs.html',1,'poly::IR::Addr']]],
   ['count_227',['Count',['../structpoly_1_1IR_1_1MergingCost_1_1Count.html',1,'poly::IR::MergingCost']]],
-  ['cpuregisterfile_228',['CPURegisterFile',['../classCPURegisterFile.html',1,'']]],
+  ['cpuregisterfile_228',['CPURegisterFile',['../classpoly_1_1RegisterFile_1_1CPURegisterFile.html',1,'poly::RegisterFile']]],
   ['cval_229',['CVal',['../classpoly_1_1IR_1_1CVal.html',1,'poly::IR']]]
 ];

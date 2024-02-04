@@ -16,7 +16,7 @@ var searchData=
   ['contig_40',['contig',['../structOrthogonalAxes.html#aa85a7e4723cadca5f8a0a30b0bb7b8cb',1,'OrthogonalAxes']]],
   ['costs_41',['Costs',['../structpoly_1_1IR_1_1Addr_1_1Costs.html',1,'poly::IR::Addr']]],
   ['count_42',['Count',['../structpoly_1_1IR_1_1MergingCost_1_1Count.html',1,'poly::IR::MergingCost']]],
-  ['cpuregisterfile_43',['CPURegisterFile',['../classCPURegisterFile.html',1,'']]],
+  ['cpuregisterfile_43',['CPURegisterFile',['../classpoly_1_1RegisterFile_1_1CPURegisterFile.html',1,'poly::RegisterFile']]],
   ['createselect_44',['createSelect',['../classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d',1,'poly::IR::Cache']]],
   ['cse_45',['cse',['../classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750',1,'poly::IR::Cache']]],
   ['currentdepth_46',['currentDepth',['../classpoly_1_1IR_1_1Node.html#abae95c9a27f6ce1fafb2e0b4fb7844e8',1,'poly::IR::Node']]],

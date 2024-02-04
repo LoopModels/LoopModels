@@ -2,7 +2,7 @@ var searchData=
 [
   ['geta_63',['getA',['../classpoly_1_1poly_1_1Loop.html#a9f23d8e6010cda90b7fdeddea825fdf4',1,'poly::poly::Loop']]],
   ['getallocator_64',['getAllocator',['../classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0',1,'poly::IR::Cache']]],
-  ['getcost_65',['getCost',['../classpoly_1_1IR_1_1Compute.html#aaadd761eb65489417c37e1b933d1211f',1,'poly::IR::Compute::getCost()'],['../classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503',1,'poly::IR::Value::getCost()']]],
+  ['getcost_65',['getCost',['../classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503',1,'poly::IR::Value']]],
   ['getedge_66',['GetEdge',['../structpoly_1_1lp_1_1ScheduledNode_1_1GetEdge.html',1,'poly::lp::ScheduledNode']]],
   ['getinindmat_67',['getInIndMat',['../structpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b',1,'poly::poly::Dependence']]],
   ['getlast_68',['getLast',['../classpoly_1_1IR_1_1Loop.html#a7570a422be7a0a39b0fbd2989f89111e',1,'poly::IR::Loop']]],
