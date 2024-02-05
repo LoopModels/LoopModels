@@ -28,7 +28,7 @@ jobs:
       env:
         CTEST_OUTPUT_ON_FAILURE: 1
     - run: gcovr --exclude-throw-branches --exclude-unreachable-branches --gcov-ignore-parse-errors --xml=coverage.xml --json=coverage.json --txt=coverage.txt
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
       with:
         files: coverage.xml, coverage.json, coverage.txt
   # macos:
@@ -64,7 +64,7 @@ jobs:
     #   env:
     #     CTEST_OUTPUT_ON_FAILURE: 1
     # - run: gcovr --exclude-throw-branches --exclude-unreachable-branches --xml=coverage.xml --json=coverage.json --txt=coverage.txt
-    # - uses: codecov/codecov-action@v3
+    # - uses: codecov/codecov-action@v4
     #   with:
     #     files: coverage.xml, coverage.json, coverage.txt
 
