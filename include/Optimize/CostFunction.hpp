@@ -133,20 +133,23 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary mcs,
       // 2. contiguous load for each vectorization factor of length equal to
       // unroll, followed by shuffles.
       // E.g., unroll contig by 4, another dim is vectorized by 8:
-      // we'd have 8 vloads (max(4/8,1) * 8), followed by 4*log2(8) +
-      // log2(max(8/4,1))*4 shuffles.
+      // we'd have 8 vloads (max(4/8,1) * 8), followed by 4*log2(8) shuffles.
       // Or, if we unroll contig by 8, and another dim is vectorzeed by 2, we'd
-      // have 8 = (max(8/2,1) * 2) vloads, 8*log2(2) + log2(max(2/8,1))*8
+      // have 8 = (max(8/2,1) * 2) vloads, 8*log2(2)
       // shuffles.
+      // Earlier, I had another term, `4*log2(max(8/4,1)) `log2(max(2/8,1))*8`
+      // but I think we can avoid this by always working with vectors that are
+      // the larger of `u` and `v`, inserting at the start or extracting at the
+      // end, whichever is necessary.
       // We divide by `u[contig]`, as it is now accounted for
       // So we have
-      // max(v/u, 1) + u*log2(v) + log2(max(v/u ,1))*u
+      // max(v/u, 1) + u*log2(v)
       utils::eltype_t<decltype(invunrolls)> iu{invunrolls[0, orth.contig]},
         u{invunrolls[1, orth.contig]},
         mr{math::smax((1 << vfi.l2factor) * iu, 1)};
       utils::invariant(iu == 1 / u);
-      c *= math::smin(mc.contiguous * mr + u * (vfi.l2factor + log2(mr)),
-                      mc.discontiguous);
+      // FIXME: memory and shuffle cost should be separate?
+      c *= math::smin(mc.contiguous * mr + u * vfi.l2factor, mc.discontiguous);
     }
   } else c *= mc.scalar;
   return c;
