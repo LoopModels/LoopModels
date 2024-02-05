@@ -90,15 +90,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getA</b> ()
 <tr class="memitem:a5dc42db6dc5d51b006dbbd08c8129083"><td class="memItemLeft" align="right" valign="top"><a id="a5dc42db6dc5d51b006dbbd08c8129083"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getE</b> () const</td></tr>
 <tr class="separator:a5dc42db6dc5d51b006dbbd08c8129083"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a21c97eb95705bf9d3fd68e0d1155dac1"><td class="memItemLeft" align="right" valign="top"><a id="a21c97eb95705bf9d3fd68e0d1155dac1"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row&lt;&gt; r)</td></tr>
-<tr class="separator:a21c97eb95705bf9d3fd68e0d1155dac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab74ce8b14eda16f3bce0a71ddd00483b"><td class="memItemLeft" align="right" valign="top"><a id="ab74ce8b14eda16f3bce0a71ddd00483b"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumEqCon</b> (Row&lt;&gt; r)</td></tr>
-<tr class="separator:ab74ce8b14eda16f3bce0a71ddd00483b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a39af5e92a33714d39c33fbeb95243b1b"><td class="memItemLeft" align="right" valign="top"><a id="a39af5e92a33714d39c33fbeb95243b1b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (alloc::Mallocator&lt; int64_t &gt; alloc={}) -&gt; <a class="el" href="structpoly_1_1comparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
-<tr class="separator:a39af5e92a33714d39c33fbeb95243b1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c0da8a366664044c367ab026e2892f1"><td class="memItemLeft" align="right" valign="top"><a id="a1c0da8a366664044c367ab026e2892f1"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumInEqCon</b> (Row r)</td></tr>
+<tr class="separator:a1c0da8a366664044c367ab026e2892f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ada8de3e1df4c6b24e1cd37ee6a7edf86"><td class="memItemLeft" align="right" valign="top"><a id="ada8de3e1df4c6b24e1cd37ee6a7edf86"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>truncNumEqCon</b> (Row r)</td></tr>
+<tr class="separator:ada8de3e1df4c6b24e1cd37ee6a7edf86"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adfe7df22a22065af085c4c296318fa26"><td class="memItemLeft" align="right" valign="top"><a id="adfe7df22a22065af085c4c296318fa26"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (std::allocator&lt; int64_t &gt; alloc={}) -&gt; <a class="el" href="structpoly_1_1comparator_1_1LinearSymbolicComparator.html">comparator::LinearSymbolicComparator</a></td></tr>
+<tr class="separator:adfe7df22a22065af085c4c296318fa26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac40588bf35ee25df85d0259b15bdf278"><td class="memItemLeft" align="right" valign="top"><a id="ac40588bf35ee25df85d0259b15bdf278"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>initializeComparator</b> (Arena&lt;&gt; *alloc) -&gt; <a class="el" href="structpoly_1_1comparator_1_1PtrSymbolicComparator.html">comparator::PtrSymbolicComparator</a></td></tr>
 <tr class="separator:ac40588bf35ee25df85d0259b15bdf278"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -169,9 +169,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>truncateVars</b> (ptr
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a56cf7dea8e1688d3a5fec788912bb448"><td class="memItemLeft" align="right" valign="top"><a id="a56cf7dea8e1688d3a5fec788912bb448"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;os, const <a class="el" href="structpoly_1_1poly_1_1BasePolyhedra.html">BasePolyhedra</a> &amp;p) -&gt; std::ostream &amp;</td></tr>
-<tr class="separator:a56cf7dea8e1688d3a5fec788912bb448"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a43566a49c76a850cc3c62477caaa23c7"><td class="memItemLeft" align="right" valign="top"><a id="a43566a49c76a850cc3c62477caaa23c7"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="structpoly_1_1poly_1_1BasePolyhedra.html">BasePolyhedra</a> &amp;p) -&gt; llvm::raw_ostream &amp;</td></tr>
+<tr class="separator:a43566a49c76a850cc3c62477caaa23c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><h3>template&lt;bool HasEqualities, bool HasSymbols, bool MaybeNonNeg, typename P&gt;<br />

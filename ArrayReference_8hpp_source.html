@@ -72,50 +72,49 @@ $(function() {
 <div class="fragment"><div class="line"><a name="l00001"></a><span class="lineno">    1</span>&#160;<span class="preprocessor">#pragma once</span></div>
 <div class="line"><a name="l00002"></a><span class="lineno">    2</span>&#160;<span class="preprocessor">#include &quot;IR/Address.hpp&quot;</span></div>
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160;<span class="preprocessor">#include &quot;Math/Math.hpp&quot;</span></div>
-<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Math/MatrixDimensions.hpp&quot;</span></div>
-<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
-<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160; </div>
-<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;<span class="keyword">namespace </span>poly {</div>
-<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160; </div>
-<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;<span class="keyword">using</span> math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, alloc::Arena,</div>
-<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160;  math::PtrVector, math::DenseDims, utils::Valid;</div>
-<div class="line"><a name="l00013"></a><span class="lineno">   13</span>&#160; </div>
-<div class="line"><a name="l00014"></a><span class="lineno"><a class="line" href="structpoly_1_1ArrayReference.html">   14</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a> {</div>
-<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <span class="keyword">const</span> llvm::SCEVUnknown *basePointer;</div>
-<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *loop;</div>
-<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  DenseMatrix&lt;int64_t&gt; indMat;</div>
-<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  DenseMatrix&lt;int64_t&gt; offMat;</div>
-<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sizes;</div>
-<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;  <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> llvm::SCEVUnknown *p, <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *l, <span class="keywordtype">unsigned</span> dim)</div>
-<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;    : basePointer(p), loop(l), indMat(DenseDims{loop-&gt;getNumLoops(), dim}),</div>
-<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;      offMat(DenseDims{dim, 1}), sizes(dim) {</div>
-<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    indexMatrix() &lt;&lt; 0;</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;    offsetMatrix() &lt;&lt; 0;</div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  }</div>
-<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a> &amp;other, <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *al,</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;                 PtrMatrix&lt;int64_t&gt; iM)</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;    : basePointer(other.basePointer), loop(al), indMat(iM),</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;      offMat(other.offMat), sizes(other.sizes) {}</div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">auto</span> indexMatrix() -&gt; MutPtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> indMat; }</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">auto</span> offsetMatrix() -&gt; MutPtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> offMat; }</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; ptrdiff_t {</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;    <span class="keywordflow">return</span> ptrdiff_t(offMat.numRow());</div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;  }</div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;};</div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="comment">// inline auto createMemAccess(Arena&lt;&gt; *alloc, ArrayReference &amp;ar,</span></div>
-<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;<span class="comment">//                             llvm::Instruction *IC, PtrVector&lt;unsigned&gt;</span></div>
-<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160;<span class="comment">//                             omegas)</span></div>
-<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;<span class="comment">//   -&gt; Valid&lt;IR::Addr&gt; {</span></div>
-<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160; </div>
-<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;<span class="comment">//   math::IntMatrix indMatT{ar.indMat.t()};</span></div>
-<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;<span class="comment">//   return IR::Addr::construct(alloc, ar.basePointer, *ar.loop, IC, indMatT,</span></div>
-<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;<span class="comment">//                              {ar.sizes, {}}, ar.offsetMatrix(), omegas);</span></div>
-<div class="line"><a name="l00044"></a><span class="lineno">   44</span>&#160;<span class="comment">// }</span></div>
-<div class="line"><a name="l00045"></a><span class="lineno">   45</span>&#160;} <span class="comment">// namespace poly</span></div>
-<div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:328</div></div>
-<div class="ttc" id="astructpoly_1_1ArrayReference_html"><div class="ttname"><a href="structpoly_1_1ArrayReference.html">poly::ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:14</div></div>
+<div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="preprocessor">#include &quot;Polyhedra/Loops.hpp&quot;</span></div>
+<div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="preprocessor">#include &lt;cstdint&gt;</span></div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;<span class="preprocessor">#include &lt;llvm/Support/Allocator.h&gt;</span></div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160; </div>
+<div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;<span class="keyword">namespace </span>poly {</div>
+<div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160; </div>
+<div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;<span class="keyword">using</span> math::DenseMatrix, math::PtrMatrix, math::MutPtrMatrix, utils::Arena,</div>
+<div class="line"><a name="l00011"></a><span class="lineno">   11</span>&#160;  math::PtrVector, utils::NotNull;</div>
+<div class="line"><a name="l00012"></a><span class="lineno">   12</span>&#160; </div>
+<div class="line"><a name="l00013"></a><span class="lineno"><a class="line" href="structpoly_1_1ArrayReference.html">   13</a></span>&#160;<span class="keyword">struct </span><a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a> {</div>
+<div class="line"><a name="l00014"></a><span class="lineno">   14</span>&#160;  <span class="keyword">const</span> llvm::SCEVUnknown *basePointer;</div>
+<div class="line"><a name="l00015"></a><span class="lineno">   15</span>&#160;  <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *loop;</div>
+<div class="line"><a name="l00016"></a><span class="lineno">   16</span>&#160;  DenseMatrix&lt;int64_t&gt; indMat;</div>
+<div class="line"><a name="l00017"></a><span class="lineno">   17</span>&#160;  DenseMatrix&lt;int64_t&gt; offMat;</div>
+<div class="line"><a name="l00018"></a><span class="lineno">   18</span>&#160;  llvm::SmallVector&lt;const llvm::SCEV *, 3&gt; sizes;</div>
+<div class="line"><a name="l00019"></a><span class="lineno">   19</span>&#160;  <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> llvm::SCEVUnknown *p, <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *l, <span class="keywordtype">size_t</span> dim)</div>
+<div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160;    : basePointer(p), loop(l), indMat(DenseDims{loop-&gt;getNumLoops(), dim}),</div>
+<div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;      offMat(DenseDims{dim, 1}), sizes(dim) {</div>
+<div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160;    indexMatrix() &lt;&lt; 0;</div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;    offsetMatrix() &lt;&lt; 0;</div>
+<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160;  }</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;  <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a>(<span class="keyword">const</span> <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a> &amp;other, <a class="code" href="classpoly_1_1poly_1_1Loop.html">poly::Loop</a> *al,</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;                 PtrMatrix&lt;int64_t&gt; iM)</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;    : basePointer(other.basePointer), loop(al), indMat(iM),</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;      offMat(other.offMat), sizes(other.sizes) {}</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="keyword">auto</span> indexMatrix() -&gt; MutPtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> indMat; }</div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">auto</span> offsetMatrix() -&gt; MutPtrMatrix&lt;int64_t&gt; { <span class="keywordflow">return</span> offMat; }</div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getArrayDim() <span class="keyword">const</span> -&gt; ptrdiff_t {</div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;    <span class="keywordflow">return</span> ptrdiff_t(offMat.numRow());</div>
+<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160;  }</div>
+<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;};</div>
+<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> createMemAccess(Arena&lt;&gt; *alloc, <a class="code" href="structpoly_1_1ArrayReference.html">ArrayReference</a> &amp;ar,</div>
+<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;                            llvm::Instruction *IC, PtrVector&lt;unsigned&gt; omegas)</div>
+<div class="line"><a name="l00037"></a><span class="lineno">   37</span>&#160;  -&gt; NotNull&lt;IR::Addr&gt; {</div>
+<div class="line"><a name="l00038"></a><span class="lineno">   38</span>&#160; </div>
+<div class="line"><a name="l00039"></a><span class="lineno">   39</span>&#160;  IntMatrix indMatT(ar.indMat.transpose());</div>
+<div class="line"><a name="l00040"></a><span class="lineno">   40</span>&#160;  <span class="keywordflow">return</span> <a class="code" href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">IR::Addr::construct</a>(alloc, ar.basePointer, *ar.loop, IC, indMatT,</div>
+<div class="line"><a name="l00041"></a><span class="lineno">   41</span>&#160;                             {ar.sizes, {}}, ar.offsetMatrix(), omegas);</div>
+<div class="line"><a name="l00042"></a><span class="lineno">   42</span>&#160;}</div>
+<div class="line"><a name="l00043"></a><span class="lineno">   43</span>&#160;} <span class="comment">// namespace poly</span></div>
+<div class="ttc" id="aclasspoly_1_1IR_1_1Addr_html_a2dc2526ae4d8b61af7f8fff28ef2bb6f"><div class="ttname"><a href="classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f">poly::IR::Addr::construct</a></div><div class="ttdeci">static auto construct(Arena&lt;&gt; *alloc, const llvm::SCEVUnknown *arrayPtr, llvm::Instruction *user, PtrMatrix&lt; int64_t &gt; indMat, std::array&lt; llvm::SmallVector&lt; const llvm::SCEV *, 3 &gt;, 2 &gt; szOff, PtrVector&lt; int64_t &gt; coffsets, int64_t *offsets, unsigned numLoops, unsigned maxNumLoops) -&gt; NotNull&lt; Addr &gt;</div><div class="ttdoc">Constructor for regular indexing.</div><div class="ttdef"><b>Definition:</b> Address.hpp:261</div></div>
+<div class="ttc" id="aclasspoly_1_1poly_1_1Loop_html"><div class="ttname"><a href="classpoly_1_1poly_1_1Loop.html">poly::poly::Loop</a></div><div class="ttdef"><b>Definition:</b> Loops.hpp:329</div></div>
+<div class="ttc" id="astructpoly_1_1ArrayReference_html"><div class="ttname"><a href="structpoly_1_1ArrayReference.html">poly::ArrayReference</a></div><div class="ttdef"><b>Definition:</b> ArrayReference.hpp:13</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

@@ -91,9 +91,9 @@ Public Types</h2></td></tr>
 <tr class="memitem:a7b685424f1ab3d6cbed7b9d97928d8f0"><td class="memItemLeft" align="right" valign="top"><a id="a7b685424f1ab3d6cbed7b9d97928d8f0"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>Base</b> = <a class="el" href="structpoly_1_1comparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator</a>&lt; <a class="el" href="structpoly_1_1comparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a> &gt;</td></tr>
 <tr class="separator:a7b685424f1ab3d6cbed7b9d97928d8f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00e14d9c06f8abf019558f4846dd2283"><td class="memItemLeft" align="right" valign="top"><a id="a00e14d9c06f8abf019558f4846dd2283"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> = math::ManagedArray&lt; int64_t, DenseDims&lt;&gt; &gt;</td></tr>
-<tr class="separator:a00e14d9c06f8abf019558f4846dd2283"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6664af1a84cad93ed7a5d760527ad2fb"><td class="memItemLeft" align="right" valign="top"><a id="a6664af1a84cad93ed7a5d760527ad2fb"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Matrix</b> = math::ManagedArray&lt; int64_t, DenseDims &gt;</td></tr>
+<tr class="separator:a6664af1a84cad93ed7a5d760527ad2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_types_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_types_structpoly_1_1comparator_1_1BaseSymbolicComparator')"><img src="closed.png" alt="-"/>&#160;Public Types inherited from <a class="el" href="structpoly_1_1comparator_1_1BaseSymbolicComparator.html">poly::comparator::BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;</a></td></tr>
 <tr class="memitem:a0c843bced931f158f9b36866f8474062 inherit pub_types_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a0c843bced931f158f9b36866f8474062"></a>
 using&#160;</td><td class="memItemRight" valign="bottom"><b>ThisT</b> = <a class="el" href="structpoly_1_1comparator_1_1BaseSymbolicComparator.html">BaseSymbolicComparator</a>&lt; <a class="el" href="structpoly_1_1comparator_1_1LinearSymbolicComparator.html">LinearSymbolicComparator</a> &gt;</td></tr>
@@ -122,21 +122,21 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b
 <tr class="memitem:a62ecdfac977614581b87e646b7d01a14"><td class="memItemLeft" align="right" valign="top"><a id="a62ecdfac977614581b87e646b7d01a14"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDImpl</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a62ecdfac977614581b87e646b7d01a14"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a67a16ab155cc316f168d4e832ff0125b"><td class="memItemLeft" align="right" valign="top"><a id="a67a16ab155cc316f168d4e832ff0125b"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURankImpl</b> (Row&lt;&gt; r)</td></tr>
-<tr class="separator:a67a16ab155cc316f168d4e832ff0125b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36f8bfb1beb79ee7e0a93669fbe9a0d6"><td class="memItemLeft" align="right" valign="top"><a id="a36f8bfb1beb79ee7e0a93669fbe9a0d6"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURankImpl</b> (Row r)</td></tr>
+<tr class="separator:a36f8bfb1beb79ee7e0a93669fbe9a0d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d2db8bf47a57bbf5516232246de0bb9"><td class="memItemLeft" align="right" valign="top"><a id="a6d2db8bf47a57bbf5516232246de0bb9"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getURankImpl</b> () const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a6d2db8bf47a57bbf5516232246de0bb9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24939404684b42427122dca60ca8f4e5"><td class="memItemLeft" align="right" valign="top"><a id="a24939404684b42427122dca60ca8f4e5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUImpl</b> (Row&lt;&gt; r, Col&lt;&gt; c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a24939404684b42427122dca60ca8f4e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a74b9f45b591bbbcf4044ef547b67f600"><td class="memItemLeft" align="right" valign="top"><a id="a74b9f45b591bbbcf4044ef547b67f600"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b> (Row&lt;&gt; r, Col&lt;&gt; c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a74b9f45b591bbbcf4044ef547b67f600"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af99d486aacd27d9732951f1f3e629a12"><td class="memItemLeft" align="right" valign="top"><a id="af99d486aacd27d9732951f1f3e629a12"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDImpl</b> (Row&lt;&gt; N) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
-<tr class="separator:af99d486aacd27d9732951f1f3e629a12"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8bac7ce0fbce0f625c90a0faea31541"><td class="memItemLeft" align="right" valign="top"><a id="aa8bac7ce0fbce0f625c90a0faea31541"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getUImpl</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:aa8bac7ce0fbce0f625c90a0faea31541"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0af46a08ea411d5f5b1b7ef57b1ccb51"><td class="memItemLeft" align="right" valign="top"><a id="a0af46a08ea411d5f5b1b7ef57b1ccb51"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getVImpl</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a0af46a08ea411d5f5b1b7ef57b1ccb51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0058d577efbe074d2aca75c40257480"><td class="memItemLeft" align="right" valign="top"><a id="ae0058d577efbe074d2aca75c40257480"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDImpl</b> (Row N) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:ae0058d577efbe074d2aca75c40257480"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="structpoly_1_1comparator_1_1BaseSymbolicComparator.html">poly::comparator::BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;</a></td></tr>
 <tr class="memitem:a22539449934b7104f24344b771f6d639 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a22539449934b7104f24344b771f6d639"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumConstTermsImpl</b> () const -&gt; ptrdiff_t</td></tr>
@@ -147,30 +147,30 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> ()
 <tr class="memitem:a0f6630b3abbc3df4f7cd45a0d8c82d8d inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a0f6630b3abbc3df4f7cd45a0d8c82d8d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> () const</td></tr>
 <tr class="separator:a0f6630b3abbc3df4f7cd45a0d8c82d8d inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8cbabfeb0f63c47f457a1ff443e7436 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aa8cbabfeb0f63c47f457a1ff443e7436"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row&lt;&gt; r, Col&lt;&gt; c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:aa8cbabfeb0f63c47f457a1ff443e7436 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae13226c50725da22bf31e50253a84f8c inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ae13226c50725da22bf31e50253a84f8c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:ae13226c50725da22bf31e50253a84f8c inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecaaf79fdc068b07f70d85719fd94c3a inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aecaaf79fdc068b07f70d85719fd94c3a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> () -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
 <tr class="separator:aecaaf79fdc068b07f70d85719fd94c3a inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a578f9c1ea7ec7c3c6ee6fa475e408038 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a578f9c1ea7ec7c3c6ee6fa475e408038"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> () const</td></tr>
 <tr class="separator:a578f9c1ea7ec7c3c6ee6fa475e408038 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4001a7466bccaccfe85201912b0958f0 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a4001a7466bccaccfe85201912b0958f0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (Row&lt;&gt; r, Col&lt;&gt; c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a4001a7466bccaccfe85201912b0958f0 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7eecf56abea449319a38e551ce398ab9 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a7eecf56abea449319a38e551ce398ab9"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a7eecf56abea449319a38e551ce398ab9 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d3375dd06a53c02563215160dca8581 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a3d3375dd06a53c02563215160dca8581"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> () -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a3d3375dd06a53c02563215160dca8581 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a70cf48bd287f80afdbd3eebd09efaf90 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a70cf48bd287f80afdbd3eebd09efaf90"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a70cf48bd287f80afdbd3eebd09efaf90 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04851e54455aaf6e4bf2aeb3be10559f inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a04851e54455aaf6e4bf2aeb3be10559f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (Row&lt;&gt; n) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
-<tr class="separator:a04851e54455aaf6e4bf2aeb3be10559f inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46626643ce15108ab7588d5d1b0a2629 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a46626643ce15108ab7588d5d1b0a2629"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row&lt;&gt; r)</td></tr>
-<tr class="separator:a46626643ce15108ab7588d5d1b0a2629 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75cef9f03c92e2cbcd8c9388c6ce9e76 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a75cef9f03c92e2cbcd8c9388c6ce9e76"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (Row n) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a75cef9f03c92e2cbcd8c9388c6ce9e76 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae35a640ecca28d000c3c549e18ccb074 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ae35a640ecca28d000c3c549e18ccb074"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row r)</td></tr>
+<tr class="separator:ae35a640ecca28d000c3c549e18ccb074 inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ed16bacb81b04c20761db10ba924a3a inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a8ed16bacb81b04c20761db10ba924a3a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getURank</b> () const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a8ed16bacb81b04c20761db10ba924a3a inherit pub_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -307,9 +307,9 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memo
 <tr class="memitem:ad20da7780947656c9bbbde9eec44bec0 inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="ad20da7780947656c9bbbde9eec44bec0"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, PtrMatrix&lt; int64_t &gt; E, ptrdiff_t numNonNegative) -&gt; ptrdiff_t</td></tr>
 <tr class="separator:ad20da7780947656c9bbbde9eec44bec0 inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a52cb097aba3dbe3fb1fd7c6eab6e327f inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a52cb097aba3dbe3fb1fd7c6eab6e327f"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededImpl</b> (Row&lt;&gt; Ar, Col&lt;&gt; Ac, Row&lt;&gt; Er, ptrdiff_t numPos) -&gt; ptrdiff_t</td></tr>
-<tr class="separator:a52cb097aba3dbe3fb1fd7c6eab6e327f inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69659377be3bf194dce66f1c7c21f1af inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a69659377be3bf194dce66f1c7c21f1af"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededImpl</b> (Row Ar, Col Ac, Row Er, ptrdiff_t numPos) -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a69659377be3bf194dce66f1c7c21f1af inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a319ff811c889203c64530e08cb77dc18 inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a319ff811c889203c64530e08cb77dc18"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeeded</b> (PtrMatrix&lt; int64_t &gt; A, EmptyMatrix&lt; int64_t &gt;, bool pos0) -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a319ff811c889203c64530e08cb77dc18 inherit pub_static_methods_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -332,12 +332,12 @@ Matrix&#160;</td><td class="memItemRight" valign="bottom"><b>V</b></td></tr>
 Vector&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>d</b></td></tr>
 <tr class="separator:a8045ba1fb5d2834963b8fc97ec67fef2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td colspan="2" onclick="javascript:toggleInherit('pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator')"><img src="closed.png" alt="-"/>&#160;Public Attributes inherited from <a class="el" href="structpoly_1_1comparator_1_1BaseSymbolicComparator.html">poly::comparator::BaseSymbolicComparator&lt; LinearSymbolicComparator &gt;</a></td></tr>
-<tr class="memitem:aa6919ee28b4fbfc896d8443bf9ac03a2 inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="aa6919ee28b4fbfc896d8443bf9ac03a2"></a>
-ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><b>numVar</b></td></tr>
-<tr class="separator:aa6919ee28b4fbfc896d8443bf9ac03a2 inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a86d4ece91814848af39a5aa4e68cbb26 inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a86d4ece91814848af39a5aa4e68cbb26"></a>
-ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><b>numEquations</b></td></tr>
-<tr class="separator:a86d4ece91814848af39a5aa4e68cbb26 inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a66a7c461ec680c06bdeb053ca33dadd8 inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a66a7c461ec680c06bdeb053ca33dadd8"></a>
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>numVar</b></td></tr>
+<tr class="separator:a66a7c461ec680c06bdeb053ca33dadd8 inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a49ce537da0e13d47e1613144425ac80a inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memItemLeft" align="right" valign="top"><a id="a49ce537da0e13d47e1613144425ac80a"></a>
+unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>numEquations</b></td></tr>
+<tr class="separator:a49ce537da0e13d47e1613144425ac80a inherit pub_attribs_structpoly_1_1comparator_1_1BaseSymbolicComparator"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li>include/Polyhedra/<a class="el" href="Comparators_8hpp_source.html">Comparators.hpp</a></li>
