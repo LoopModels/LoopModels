@@ -119,7 +119,8 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary mcs,
                     VectorizationFactor vfi)
   -> utils::eltype_t<decltype(invunrolls)> {
   auto [mc, orth] = mcs;
-  utils::eltype_t<decltype(invunrolls)> c{cost(invunrolls, orth.indep)};
+  using T = utils::eltype_t<decltype(invunrolls)>;
+  T c{cost(invunrolls, orth.indep)};
   if (!(orth.indep & vfi.indexMask)) {
     // depends on vectorized index
     if (vfi.indexMask & orth.contig) {
@@ -134,22 +135,64 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary mcs,
       // unroll, followed by shuffles.
       // E.g., unroll contig by 4, another dim is vectorized by 8:
       // we'd have 8 vloads (max(4/8,1) * 8), followed by 4*log2(8) shuffles.
+      // w_0 = [0,  8, 16, 24]
+      // w_1 = [1,  9, 17, 25]
+      // w_2 = [2, 10, 18, 26]
+      // w_3 = [3, 11, 19, 27]
+      // w_4 = [4, 12, 20, 28]
+      // w_5 = [5, 13, 21, 29]
+      // w_6 = [6, 14, 22, 30]
+      // w_7 = [7, 15, 23, 31]
+      //
+      // x_0 = [0,  8, 16, 24, 4, 12, 20, 28]
+      // x_1 = [1,  9, 17, 25, 5, 13, 21, 29]
+      // x_2 = [2, 10, 18, 26, 6, 14, 22, 30]
+      // x_3 = [3, 11, 19, 27, 7, 15, 23, 31]
+      //
+      // y_0 = [0,  1, 16, 17, 4, 5, 20, 21]
+      // y_1 = [8,  9, 24, 25, 12, 13, 28, 29]
+      // y_2 = [2, 3, 18, 19, 6, 7, 22, 23]
+      // y_3 = [10, 11, 26, 27, 14, 15, 30, 31]
+      //
+      // z_0 = [0,  1, 2, 3, 4, 5, 6, 7]
+      // z_1 = [8,  9, 10, 11, 12, 13, 14, 15]
+      // z_2 = [16, 17, 18, 19, 20, 21, 22, 23]
+      // z_3 = [24, 25, 26, 27, 28, 29, 30, 31]
+      //
       // Or, if we unroll contig by 8, and another dim is vectorzeed by 2, we'd
       // have 8 = (max(8/2,1) * 2) vloads, 8*log2(2)
       // shuffles.
-      // Earlier, I had another term, `4*log2(max(8/4,1)) `log2(max(2/8,1))*8`
+      // w_0_0 = [0, 2]
+      // w_0_1 = [4, 6]
+      // w_0_2 = [8, 10]
+      // w_0_3 = [12, 14]
+      // w_1_0 = [1, 3]
+      // w_1_1 = [5, 7]
+      // w_1_2 = [9, 11]
+      // w_1_3 = [13, 15]
+      //
+      // z_0 = [0, 1]
+      // z_1 = [2, 3]
+      // z_2 = [4, 5]
+      // z_3 = [6, 7]
+      // z_4 = [8, 9]
+      // z_5 = [10, 11]
+      // z_6 = [12, 13]
+      // z_7 = [14, 15]
+      // Earlier, I had another term, `4*log2(max(8/4,1)) `8*log2(max(2/8,1))`
+      // i.e. u*log2(max(v/u,1))
       // but I think we can avoid this by always working with vectors that are
       // the larger of `u` and `v`, inserting at the start or extracting at the
       // end, whichever is necessary.
       // We divide by `u[contig]`, as it is now accounted for
       // So we have
-      // max(v/u, 1) + u*log2(v)
-      utils::eltype_t<decltype(invunrolls)> iu{invunrolls[0, orth.contig]},
-        u{invunrolls[1, orth.contig]},
-        mr{math::smax((1 << vfi.l2factor) * iu, 1)};
+      // v*max(u/v, 1) + u*log2(v)
+      T iu{invunrolls[0, orth.contig]}, u{invunrolls[1, orth.contig]};
       utils::invariant(iu == 1 / u);
       // FIXME: memory and shuffle cost should be separate?
-      c *= math::smin(mc.contiguous * mr + u * vfi.l2factor, mc.discontiguous);
+      c *= math::smin(mc.contiguous * math::smax(u, (1 << vfi.l2factor) * iu) +
+                        u * vfi.l2factor,
+                      mc.discontiguous);
     }
   } else c *= mc.scalar;
   return c;
