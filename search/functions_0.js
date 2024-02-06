@@ -1,9 +1,4 @@
 var searchData=
 [
-  ['checksat_261',['checkSat',['../classpoly_1_1poly_1_1DepPoly.html#adf5466c660c3bbeafd6133788d9f9986',1,'poly::poly::DepPoly']]],
-  ['compactunion_262',['compactUnion',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d',1,'poly::IR::Predicate::Intersection']]],
-  ['complete_263',['complete',['../classpoly_1_1IR_1_1Cache.html#a676ae808fe76addfbec6eda207c9bda2',1,'poly::IR::Cache']]],
-  ['construct_264',['construct',['../classpoly_1_1IR_1_1Addr.html#a2dc2526ae4d8b61af7f8fff28ef2bb6f',1,'poly::IR::Addr']]],
-  ['createselect_265',['createSelect',['../classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d',1,'poly::IR::Cache']]],
-  ['cse_266',['cse',['../classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750',1,'poly::IR::Cache']]]
+  ['addr_318',['Addr',['../classpoly_1_1IR_1_1Addr.html#ab49520c0888ccdf75f17d8f7de22023e',1,'poly::IR::Addr']]]
 ];

@@ -1,7 +1,11 @@
 var searchData=
 [
-  ['testloopfunction_245',['TestLoopFunction',['../classpoly_1_1TestLoopFunction.html',1,'poly']]],
-  ['treeresult_246',['TreeResult',['../structpoly_1_1IR_1_1TreeResult.html',1,'poly::IR']]],
-  ['turboloop_247',['TurboLoop',['../classpoly_1_1TurboLoop.html',1,'poly']]],
-  ['turbolooppass_248',['TurboLoopPass',['../classTurboLoopPass.html',1,'']]]
+  ['testloopfunction_296',['TestLoopFunction',['../classpoly_1_1TestLoopFunction.html',1,'poly']]],
+  ['treeresult_297',['TreeResult',['../structpoly_1_1IR_1_1TreeResult.html',1,'poly::IR']]],
+  ['triemap_298',['TrieMap',['../structpoly_1_1dict_1_1TrieMap.html',1,'poly::dict']]],
+  ['triemap_3c_20false_2c_20k_2c_20v_20_3e_299',['TrieMap&lt; false, K, V &gt;',['../structpoly_1_1dict_1_1TrieMap_3_01false_00_01K_00_01V_01_4.html',1,'poly::dict']]],
+  ['triemapnode_300',['TrieMapNode',['../structpoly_1_1dict_1_1TrieMapNode.html',1,'poly::dict']]],
+  ['triewrap_301',['TrieWrap',['../structTrieWrap.html',1,'']]],
+  ['turboloop_302',['TurboLoop',['../classpoly_1_1TurboLoop.html',1,'poly']]],
+  ['turbolooppass_303',['TurboLoopPass',['../classTurboLoopPass.html',1,'']]]
 ];

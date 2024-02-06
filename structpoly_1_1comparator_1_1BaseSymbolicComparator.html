@@ -117,18 +117,18 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> ()
 <tr class="memitem:a70cf48bd287f80afdbd3eebd09efaf90"><td class="memItemLeft" align="right" valign="top"><a id="a70cf48bd287f80afdbd3eebd09efaf90"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> () const -&gt; PtrVector&lt; int64_t &gt;</td></tr>
 <tr class="separator:a70cf48bd287f80afdbd3eebd09efaf90"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae13226c50725da22bf31e50253a84f8c"><td class="memItemLeft" align="right" valign="top"><a id="ae13226c50725da22bf31e50253a84f8c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:ae13226c50725da22bf31e50253a84f8c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7eecf56abea449319a38e551ce398ab9"><td class="memItemLeft" align="right" valign="top"><a id="a7eecf56abea449319a38e551ce398ab9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (Row r, Col c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
-<tr class="separator:a7eecf56abea449319a38e551ce398ab9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a75cef9f03c92e2cbcd8c9388c6ce9e76"><td class="memItemLeft" align="right" valign="top"><a id="a75cef9f03c92e2cbcd8c9388c6ce9e76"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (Row n) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
-<tr class="separator:a75cef9f03c92e2cbcd8c9388c6ce9e76"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae35a640ecca28d000c3c549e18ccb074"><td class="memItemLeft" align="right" valign="top"><a id="ae35a640ecca28d000c3c549e18ccb074"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row r)</td></tr>
-<tr class="separator:ae35a640ecca28d000c3c549e18ccb074"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa8cbabfeb0f63c47f457a1ff443e7436"><td class="memItemLeft" align="right" valign="top"><a id="aa8cbabfeb0f63c47f457a1ff443e7436"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getV</b> (Row&lt;&gt; r, Col&lt;&gt; c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:aa8cbabfeb0f63c47f457a1ff443e7436"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4001a7466bccaccfe85201912b0958f0"><td class="memItemLeft" align="right" valign="top"><a id="a4001a7466bccaccfe85201912b0958f0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getU</b> (Row&lt;&gt; r, Col&lt;&gt; c) -&gt; MutDensePtrMatrix&lt; int64_t &gt;</td></tr>
+<tr class="separator:a4001a7466bccaccfe85201912b0958f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a04851e54455aaf6e4bf2aeb3be10559f"><td class="memItemLeft" align="right" valign="top"><a id="a04851e54455aaf6e4bf2aeb3be10559f"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getD</b> (Row&lt;&gt; n) -&gt; MutPtrVector&lt; int64_t &gt;</td></tr>
+<tr class="separator:a04851e54455aaf6e4bf2aeb3be10559f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a46626643ce15108ab7588d5d1b0a2629"><td class="memItemLeft" align="right" valign="top"><a id="a46626643ce15108ab7588d5d1b0a2629"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setURank</b> (Row&lt;&gt; r)</td></tr>
+<tr class="separator:a46626643ce15108ab7588d5d1b0a2629"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ed16bacb81b04c20761db10ba924a3a"><td class="memItemLeft" align="right" valign="top"><a id="a8ed16bacb81b04c20761db10ba924a3a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getURank</b> () const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a8ed16bacb81b04c20761db10ba924a3a"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -240,9 +240,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:aef19d3b7cb902fc9edbc41a8befb758e"><td class="memItemLeft" align="right" valign="top"><a id="aef19d3b7cb902fc9edbc41a8befb758e"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, EmptyMatrix&lt; int64_t &gt;, ptrdiff_t numNonNegative) -&gt; ptrdiff_t</td></tr>
 <tr class="separator:aef19d3b7cb902fc9edbc41a8befb758e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a69659377be3bf194dce66f1c7c21f1af"><td class="memItemLeft" align="right" valign="top"><a id="a69659377be3bf194dce66f1c7c21f1af"></a>
-static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededImpl</b> (Row Ar, Col Ac, Row Er, ptrdiff_t numPos) -&gt; ptrdiff_t</td></tr>
-<tr class="separator:a69659377be3bf194dce66f1c7c21f1af"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52cb097aba3dbe3fb1fd7c6eab6e327f"><td class="memItemLeft" align="right" valign="top"><a id="a52cb097aba3dbe3fb1fd7c6eab6e327f"></a>
+static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededImpl</b> (Row&lt;&gt; Ar, Col&lt;&gt; Ac, Row&lt;&gt; Er, ptrdiff_t numPos) -&gt; ptrdiff_t</td></tr>
+<tr class="separator:a52cb097aba3dbe3fb1fd7c6eab6e327f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a455aff330cc629c772b4f41cb654cbfe"><td class="memItemLeft" align="right" valign="top"><a id="a455aff330cc629c772b4f41cb654cbfe"></a>
 static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memoryNeededNonNegative</b> (PtrMatrix&lt; int64_t &gt; A, ptrdiff_t numNonNegative) -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a455aff330cc629c772b4f41cb654cbfe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -261,12 +261,12 @@ static constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>memo
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a66a7c461ec680c06bdeb053ca33dadd8"><td class="memItemLeft" align="right" valign="top"><a id="a66a7c461ec680c06bdeb053ca33dadd8"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>numVar</b> {0}</td></tr>
-<tr class="separator:a66a7c461ec680c06bdeb053ca33dadd8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a49ce537da0e13d47e1613144425ac80a"><td class="memItemLeft" align="right" valign="top"><a id="a49ce537da0e13d47e1613144425ac80a"></a>
-unsigned int&#160;</td><td class="memItemRight" valign="bottom"><b>numEquations</b> {0}</td></tr>
-<tr class="separator:a49ce537da0e13d47e1613144425ac80a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa6919ee28b4fbfc896d8443bf9ac03a2"><td class="memItemLeft" align="right" valign="top"><a id="aa6919ee28b4fbfc896d8443bf9ac03a2"></a>
+ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><b>numVar</b> {0}</td></tr>
+<tr class="separator:aa6919ee28b4fbfc896d8443bf9ac03a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a86d4ece91814848af39a5aa4e68cbb26"><td class="memItemLeft" align="right" valign="top"><a id="a86d4ece91814848af39a5aa4e68cbb26"></a>
+ptrdiff_t&#160;</td><td class="memItemRight" valign="bottom"><b>numEquations</b> {0}</td></tr>
+<tr class="separator:a86d4ece91814848af39a5aa4e68cbb26"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="a86d6285e8a8d391d3f9492e5d71c2dba"></a>

@@ -83,6 +83,9 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a687a645462bca90f52fcccad1a5abd03"><td class="memItemLeft" align="right" valign="top"><a id="a687a645462bca90f52fcccad1a5abd03"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopBlock</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;deps_, alloc::Arena&lt;&gt; &amp;allocator_)</td></tr>
+<tr class="separator:a687a645462bca90f52fcccad1a5abd03"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6af0ac640aefe5a6af57e963b7f65800"><td class="memItemLeft" align="right" valign="top"><a id="a6af0ac640aefe5a6af57e963b7f65800"></a>
 auto&#160;</td><td class="memItemRight" valign="bottom"><b>optimize</b> (<a class="el" href="classpoly_1_1IR_1_1Cache.html">IR::Cache</a> &amp;cache, <a class="el" href="structpoly_1_1IR_1_1TreeResult.html">IR::TreeResult</a> tr) -&gt; <a class="el" href="structpoly_1_1lp_1_1LoopBlock_1_1OptimizationResult.html">OptimizationResult</a></td></tr>
 <tr class="separator:a6af0ac640aefe5a6af57e963b7f65800"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -92,6 +95,12 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr
 <tr class="memitem:a54d455812db5fada44fa766bddfc035d"><td class="memItemLeft" align="right" valign="top"><a id="a54d455812db5fada44fa766bddfc035d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAllocator</b> () -&gt; Arena&lt;&gt; *</td></tr>
 <tr class="separator:a54d455812db5fada44fa766bddfc035d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75eca6e6772f725cc79a5fa6bf146b67"><td class="memItemLeft" align="right" valign="top"><a id="a75eca6e6772f725cc79a5fa6bf146b67"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDependencies</b> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;</td></tr>
+<tr class="separator:a75eca6e6772f725cc79a5fa6bf146b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeef134519b53948c9c3119cda5bc5ae7"><td class="memItemLeft" align="right" valign="top"><a id="aeef134519b53948c9c3119cda5bc5ae7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDependencies</b> () const -&gt; const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;</td></tr>
+<tr class="separator:aeef134519b53948c9c3119cda5bc5ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A loop block is a block of the program that may include multiple loops. These loops are either all executed (note iteration count may be 0, or loops may be in rotated form and the guard prevents execution; this is okay and counts as executed for our purposes here ), or none of them are. That is, the <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> does not contain divergent control flow, or guards unrelated to loop bounds. The loops within a <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> are optimized together, so we can consider optimizations such as reordering or fusing them together as a set.</p>
