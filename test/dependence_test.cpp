@@ -555,12 +555,12 @@ TEST(TriangularExampleTest, BasicAssertions) {
   // badly written triangular solve:
   // for (m = 0; m < M; ++m){
   //   for (n = 0; n < N; ++n){
-  //     A(n,m) = B(n,m);
+  //     A[n,m] = B[n,m];
   //   }
   //   for (n = 0; n < N; ++n){
-  //     A(n,m) = A(n,m) / U(n,n);
+  //     A[n,m] = A[n,m] / U[n,n];
   //     for (k = n+1; k < N; ++k){
-  //       A(k,m) = A(k,m) - A(n,m)*U(k,n);
+  //       A[k,m] = A[k,m] - U[k,n]*A[n,m];
   //     }
   //   }
   // }

@@ -207,7 +207,8 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary mcs,
 constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary orth,
                     VectorizationFactor vfi, DensePtrMatrix<int64_t> inds)
   -> utils::eltype_t<decltype(invunrolls)> {
-  utils::eltype_t<decltype(invunrolls)> c{1};
+  using T = utils::eltype_t<decltype(invunrolls)>;
+  T c{1};
   auto [arrayDim, numLoops] = shape(inds);
   utils::invariant(numLoops > 0);
   utils::invariant(arrayDim > 0);
@@ -216,7 +217,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary orth,
   for (ptrdiff_t d = 0; d < arrayDim; ++d) {
     int64_t g = 0;
     containers::BitSet64 bs;
-    utils::eltype_t<decltype(invunrolls)> uprod;
+    T uprod;
     for (ptrdiff_t l = 0; l < numLoops; ++l) {
       if ((uint32_t(1) << l) == vfi.indexMask) continue;
       int64_t a = inds[d, l];
@@ -239,7 +240,7 @@ constexpr auto cost(const AbstractMatrix auto &invunrolls, MemCostSummary orth,
       bs.insert(l);
     };
     if (bs.size() < 2) continue;
-    utils::eltype_t<decltype(invunrolls)> prod{1};
+    T prod{1};
     for (ptrdiff_t l : bs) {
       if ((uint32_t(1) << l) == vfi.indexMask) continue;
       int64_t a = inds[d, l];
@@ -331,7 +332,7 @@ inline auto compcosts(const AbstractMatrix auto &invunrolls,
 //
 /// memcost = I*J*(Ui*Uj*C_{Al} + Uj*C_{yl}) / (Ui*Uj) +
 ///    I*(C_{xl}*Ui + C_{xs}*Ui) / Ui
-/// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) /
+/// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) / Ui
 /// Ui clatency = I*J*C_{l,fma}/smin(Ui*Uj, C_{l,fma}/C_{t,fma}) +
 ///    I*C_{l,add}*log2(Uj)
 ///
@@ -394,7 +395,7 @@ inline auto compcosts(const AbstractMatrix auto &invunrolls,
 /// Thus, a cost function for the above gemv could be something like
 /// memcost = I*J*(Ui*Uj*C_{Al} + Uj*C_{yl}) / (Ui*Uj) +
 ///    I*(C_{xl}*Ui + C_{xs}*Ui) / Ui
-/// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(Ui*C_{t,add}*(Uj-1)) /
+/// cthroughput = I*J*(Ui*Uj*C_{t,fma}) / (Ui*Uj) + I*(C_{t,add}*(Uj-1)) /
 /// Ui clatency = I*J*C_{l,fma}/smin(Ui*Uj, C_{l,fma}/C_{t,fma}) +
 ///    I*C_{l,add}*log2(Uj)
 /// cost = memcost + smax(cthroughput, clatency)
@@ -466,7 +467,7 @@ inline auto compcosts(const AbstractMatrix auto &invunrolls,
 /// as the cost, where `a_g = abs(a/gcd(a,b))` and `b_g = abs(b/gcd(a,b))`.
 ///
 /// For more, we generalize this pattern
-/// = 1 - \prod_{d}^{D}\left(1 - \frac{coef_{g,d}*U_d}{\prod_{i}^{D}U_i}\right)
+/// = 1 - \prod_{d}^{D}\left(1 - \frac{coef_{g,d}U_d}{\prod_{i}^{D}U_i}\right)
 ///
 /// In the `D=3` case, this expands to
 /// 1 - (1 - a_g/(U_j*U_k))(1 - b_g/(U_i*U_k))(1 - c_g/(U_i*U_j))
