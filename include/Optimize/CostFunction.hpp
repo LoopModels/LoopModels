@@ -5,6 +5,7 @@
 #include "IR/Node.hpp"
 #include "IR/OrthogonalAxes.hpp"
 #include "Optimize/CostModeling.hpp"
+#include "Optimize/Legality.hpp"
 #include "Optimize/RegisterFile.hpp"
 #include "Polyhedra/Dependence.hpp"
 #include <Containers/BitSets.hpp>
@@ -282,7 +283,8 @@ constexpr auto registerPressure(const AbstractMatrix auto &invunrolls,
   return 0.25 * math::softplus(8.0 * (acc - r.register_count));
 }
 
-inline auto registerUse(const llvm::TargetTransformInfo &TTI, IR::Loop *L)
+inline auto registerUse(const llvm::TargetTransformInfo &TTI,
+                        LoopDepSatisfaction deps, IR::Loop *L)
   -> RegisterUseByUnroll {
   RegisterUseByUnroll u;
   // Ideally, we'd have the transitive closure of depencencies, or better yet
@@ -297,6 +299,17 @@ inline auto registerUse(const llvm::TargetTransformInfo &TTI, IR::Loop *L)
   // data-oriented design.
   // The simple top-index check is enough for checking if something is infront,
   // behind, or within a loop.
+  //
+  // We scan dependencies, looking for reduction latencies
+  // can we use `TTI.getRegUsageForType()`?
+  // TargetTransformInfoImplBase defaults to `1`, and some backends like x86
+  // do not override it, so it is not something we can rely on.
+  //
+  // d.input()->reductionLatency() > 0 indicates a dependence is live across the
+  // loop otherwise, we only consider instructions within the loop?
+  // ...or...perhaps we only need to consider the loop leaf's instructions; we
+  // can see what is written and referenced.
+  // For now, will try and follow the latter approach.
   return u;
 }
 
@@ -547,7 +560,8 @@ class LoopTreeCostFn {
   // compute cost summary
   math::Vector<Pair<float, uint32_t>> compute_independence{};
   // for leaves, we need latency information
-  math::Vector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>> leafs{};
+  llvm::SmallVector<Pair<RegisterUseByUnroll, Pair<uint16_t, uint16_t>>>
+    leafs{};
   unsigned maxVectorWidth;
   ptrdiff_t max_depth{};
 
@@ -682,7 +696,8 @@ class LoopTreeCostFn {
     // breadth-first lets us retire early, but can increase
     // live count?
     // Note, every reduction must add register contribution.
-    leafs.emplace_back(registerUse(TTI, L), {l, legality.numReductions()});
+    leafs.emplace_back(registerUse(TTI, deps, L),
+                       Pair<uint16_t, uint16_t>{l, legality.numReductions()});
     // for (IR::Node *N = L->getChild(); N; N = N->getNext()) {}
     return;
   };
