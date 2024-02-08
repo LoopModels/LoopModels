@@ -184,7 +184,7 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clearVisite
 <tr class="separator:a8b52f8632fa32eb1b52d5a8c4fab8e84 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aac0107aaff71836a2e73ce03e8119fa1 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="aac0107aaff71836a2e73ce03e8119fa1"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#aac0107aaff71836a2e73ce03e8119fa1">wasVisited</a> (uint8_t d) const -&gt; bool</td></tr>
-<tr class="memdesc:aac0107aaff71836a2e73ce03e8119fa1 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="mdescLeft">&#160;</td><td class="mdescRight">wasVisited(d) { return visitDepth == d; } <br /></td></tr>
+<tr class="memdesc:aac0107aaff71836a2e73ce03e8119fa1 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="mdescLeft">&#160;</td><td class="mdescRight">bool wasVisited(uint8_t d) { return visitDepth == d; } <br /></td></tr>
 <tr class="separator:aac0107aaff71836a2e73ce03e8119fa1 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac67130a93ce27c618e3d300bd33d0325 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ac67130a93ce27c618e3d300bd33d0325"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setDependsOnParentLoop</b> ()</td></tr>
@@ -267,7 +267,8 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertParen
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>forEach</b> (const auto &amp;f)</td></tr>
 <tr class="separator:a858fbe0affa5628284f68b1475b7c157 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad59cd2d020fb4d410c3dfd6c430c4e93 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="ad59cd2d020fb4d410c3dfd6c430c4e93"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodes</b> () noexcept -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1IR_1_1Node.html#ad59cd2d020fb4d410c3dfd6c430c4e93">nodes</a> () noexcept -&gt; utils::ListRange&lt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a>, utils::GetNext, utils::Identity &gt;</td></tr>
+<tr class="memdesc:ad59cd2d020fb4d410c3dfd6c430c4e93 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="mdescLeft">&#160;</td><td class="mdescRight">Iterate through all instructions. <br /></td></tr>
 <tr class="separator:ad59cd2d020fb4d410c3dfd6c430c4e93 inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a17a890fc7aaf8a325bbf2e7ec601f12a inherit pub_methods_classpoly_1_1IR_1_1Node"><td class="memItemLeft" align="right" valign="top"><a id="a17a890fc7aaf8a325bbf2e7ec601f12a"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nodes</b> () const noexcept -&gt; utils::ListRange&lt; const <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a>, utils::GetNext, utils::Identity &gt;</td></tr>

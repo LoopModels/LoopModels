@@ -1,7 +1,8 @@
 var searchData=
 [
-  ['selectcost_372',['selectCost',['../classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de',1,'poly::IR::Operation']]],
-  ['setfusionomega_373',['setFusionOmega',['../classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477',1,'poly::IR::Addr']]],
-  ['setsatlevellp_374',['setSatLevelLP',['../structpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00',1,'poly::poly::Dependence']]],
-  ['stashedpreventsreordering_375',['stashedPreventsReordering',['../structpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955',1,'poly::poly::Dependence']]]
+  ['registereligible_371',['registerEligible',['../classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059',1,'poly::poly::Dependencies']]],
+  ['removeedge_372',['removeEdge',['../classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7',1,'poly::poly::Dependencies']]],
+  ['removeemptymask_373',['removeEmptyMask',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd',1,'poly::IR::Predicate::Intersection']]],
+  ['replacealluseswith_374',['replaceAllUsesWith',['../classpoly_1_1IR_1_1Cache.html#a40325b31d215da23367410a8eb41519f',1,'poly::IR::Cache']]],
+  ['rotate_375',['rotate',['../classpoly_1_1IR_1_1Addr.html#a136186b97137aa0fcfd884a7033ceb0d',1,'poly::IR::Addr::rotate()'],['../classpoly_1_1poly_1_1Loop.html#a03240e7893974248eddd72423304b2b5',1,'poly::poly::Loop::rotate()']]]
 ];
