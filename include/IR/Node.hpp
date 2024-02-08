@@ -148,7 +148,7 @@ public:
     return visitDepth;
   }
   constexpr void clearVisited() { visitDepth = 255; }
-  /// wasVisited(d) { return visitDepth == d; }
+  /// bool wasVisited(uint8_t d) { return visitDepth == d; }
   [[nodiscard]] constexpr auto wasVisited(uint8_t d) const -> bool {
     return visitDepth == d;
   }
@@ -274,6 +274,7 @@ public:
     if (llvm::isa<llvm::ConstantFP>(v)) return VK_Bflt;
     return VK_CVal;
   }
+  /// Iterate through all instructions
   [[nodiscard]] constexpr auto nodes() noexcept
     -> utils::ListRange<Node, utils::GetNext, utils::Identity> {
     return utils::ListRange{this, utils::GetNext{}};
@@ -297,12 +298,12 @@ class Loop : public Node {
   /// IDs are in topologically sorted order.
   CostModeling::Legality legality{};
   int32_t edgeId{-1}; // edge cycle id
-  // LegalTransforms legal{Unknown};
   // while `child` points to the first contained instruction,
   // `last` points to the last contained instruction,
   // and can be used for backwards iteration over the graph.
 
 public:
+  /// Get the IDs for the Dependencies carried by this loop
   [[nodiscard]] constexpr auto edges(poly::PtrVector<int32_t> edges) const
     -> utils::VForwardRange {
     return utils::VForwardRange{edges, edgeId};

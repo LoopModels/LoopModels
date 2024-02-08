@@ -310,6 +310,9 @@ inline auto registerUse(const llvm::TargetTransformInfo &TTI,
   // ...or...perhaps we only need to consider the loop leaf's instructions; we
   // can see what is written and referenced.
   // For now, will try and follow the latter approach.
+  for (IR::Value *v : L->nodes()) {
+    // use `v`
+  }
   return u;
 }
 

@@ -408,8 +408,8 @@ inline void topologicalSort(const IR::Dependencies &deps, IR::Loop *root,
     body = visitLoopDependent(deps, root, N, depth, body, P);
 }
 // NOLINTNEXTLINE(misc-no-recursion)
-inline auto buildSubGraph(const IR::Dependencies &deps, IR::Loop *root,
-                          int depth) -> int16_t {
+inline void buildSubGraph(const IR::Dependencies &deps, IR::Loop *root,
+                          int depth) {
   // We build the instruction graph, via traversing the tree, and then
   // top sorting as we recurse out
   for (IR::Loop *child : root->subLoops())
@@ -417,7 +417,6 @@ inline auto buildSubGraph(const IR::Dependencies &deps, IR::Loop *root,
   // The very outer `root` needs to have all instr constituents
   // we also need to add the last instruction of each loop as `last`
   topologicalSort(deps, root, depth);
-  return idx;
 }
 inline void buildGraph(const IR::Dependencies &deps, IR::Loop *root) {
   // We build the instruction graph, via traversing the tree, and then
@@ -429,7 +428,7 @@ inline void buildGraph(const IR::Dependencies &deps, IR::Loop *root) {
   addBody(deps, root, 0, root->getChild());
   // Add top sort idx
   uint32_t idx = 0; // we use ++idx, so only `const` have idx==0
-  for (IR::Node *n : root->nodes()) n->setTopIndex(++idx);
+  for (IR::Node *n : root->allNodes()) n->setTopIndex(++idx);
 }
 
 inline auto addAddrToGraph(Arena<> *salloc, Arena<> *lalloc,
