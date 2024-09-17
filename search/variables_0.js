@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['addr_425',['addr',['../structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb',1,'poly::IR::AddrChain']]]
+  ['additional_5f_553',['additional_',['../structCostModeling_1_1Register_1_1UsesAcrossBBs_1_1LiveInfo.html#a453794bc7f42178586809a114832acd3',1,'CostModeling::Register::UsesAcrossBBs::LiveInfo']]],
+  ['addr_554',['addr',['../structIR_1_1AddrChain.html#aab5208f88b0367794c3786ab6627cb09',1,'IR::AddrChain']]]
 ];

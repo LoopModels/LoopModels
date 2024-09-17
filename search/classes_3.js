@@ -1,10 +1,10 @@
 var searchData=
 [
-  ['densematrixprinter_254',['DenseMatrixPrinter',['../classprettyprinters_1_1DenseMatrixPrinter.html',1,'prettyprinters']]],
-  ['dependence_255',['Dependence',['../structpoly_1_1poly_1_1Dependence.html',1,'poly::poly']]],
-  ['dependencies_256',['Dependencies',['../classpoly_1_1poly_1_1Dependencies.html',1,'poly::poly']]],
-  ['depfilter_257',['DepFilter',['../structpoly_1_1lp_1_1ScheduledNode_1_1DepFilter.html',1,'poly::lp::ScheduledNode']]],
-  ['depids_258',['DepIDs',['../structpoly_1_1lp_1_1ScheduledNode_1_1DepIDs.html',1,'poly::lp::ScheduledNode']]],
-  ['deppoly_259',['DepPoly',['../classpoly_1_1poly_1_1DepPoly.html',1,'poly::poly']]],
-  ['deps_260',['Deps',['../structpoly_1_1lp_1_1ScheduledNode_1_1Deps.html',1,'poly::lp::ScheduledNode']]]
+  ['dependence_330',['Dependence',['../structpoly_1_1Dependence.html',1,'poly']]],
+  ['dependencies_331',['Dependencies',['../classpoly_1_1Dependencies.html',1,'poly']]],
+  ['depfilter_332',['DepFilter',['../structlp_1_1ScheduledNode_1_1DepFilter.html',1,'lp::ScheduledNode']]],
+  ['depids_333',['DepIDs',['../structlp_1_1ScheduledNode_1_1DepIDs.html',1,'lp::ScheduledNode']]],
+  ['deppoly_334',['DepPoly',['../classpoly_1_1DepPoly.html',1,'poly']]],
+  ['deps_335',['Deps',['../structlp_1_1ScheduledNode_1_1Deps.html',1,'lp::ScheduledNode']]],
+  ['depsummary_336',['DepSummary',['../structCostModeling_1_1Cache_1_1CacheOptimizer_1_1DepSummary.html',1,'CostModeling::Cache::CacheOptimizer']]]
 ];

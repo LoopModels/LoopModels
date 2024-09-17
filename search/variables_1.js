@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['contig_426',['contig',['../structOrthogonalAxes.html#aa85a7e4723cadca5f8a0a30b0bb7b8cb',1,'OrthogonalAxes']]],
-  ['currentdepth_427',['currentDepth',['../classpoly_1_1IR_1_1Node.html#abae95c9a27f6ce1fafb2e0b4fb7844e8',1,'poly::IR::Node']]]
+  ['bb_5fcosts_5f_555',['bb_costs_',['../structCostModeling_1_1Hard_1_1SubCostFn_1_1OptResult.html#aed5dd856a21661ee95d744359ad596d7',1,'CostModeling::Hard::SubCostFn::OptResult']]]
 ];

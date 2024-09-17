@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['maybereassociablereduction_404',['maybeReassociableReduction',['../classpoly_1_1IR_1_1Addr.html#a3d81fe8e443359935ea13943fadc8196',1,'poly::IR::Addr']]],
-  ['mergemap_405',['mergeMap',['../classpoly_1_1poly_1_1DepPoly.html#af2e8fbc80926c4670cf3d038c1a7c470',1,'poly::poly::DepPoly']]],
-  ['mergeoperands_406',['mergeOperands',['../structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561',1,'poly::IR::MergingCost']]]
+  ['linkreductiondst_523',['linkReductionDst',['../classIR_1_1Value.html#ad065083fbd4839f0c32dce6f6781bf70',1,'IR::Value']]],
+  ['loopmask_524',['loopMask',['../classIR_1_1Addr.html#afd6e9c402caf39fbb7cce05078d968b0',1,'IR::Addr']]]
 ];

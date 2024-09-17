@@ -1,14 +1,14 @@
 var searchData=
 [
-  ['value_205',['Value',['../classpoly_1_1IR_1_1Value.html',1,'poly::IR']]],
-  ['vcycleiterator_206',['VCycleIterator',['../classpoly_1_1utils_1_1VCycleIterator.html',1,'poly::utils']]],
-  ['vcyclerange_207',['VCycleRange',['../classpoly_1_1utils_1_1VCycleRange.html',1,'poly::utils']]],
-  ['vectorizationcosts_208',['VectorizationCosts',['../classpoly_1_1IR_1_1cost_1_1VectorizationCosts.html',1,'poly::IR::cost']]],
-  ['vectorizationfactor_209',['VectorizationFactor',['../structpoly_1_1CostModeling_1_1VectorizationFactor.html',1,'poly::CostModeling']]],
-  ['vectorprinter_210',['VectorPrinter',['../classprettyprinters_1_1VectorPrinter.html',1,'prettyprinters']]],
-  ['vectorwidth_211',['VectorWidth',['../classpoly_1_1IR_1_1cost_1_1VectorWidth.html',1,'poly::IR::cost']]],
-  ['vforwarditerator_212',['VForwardIterator',['../classpoly_1_1utils_1_1VForwardIterator.html',1,'poly::utils']]],
-  ['vforwardrange_213',['VForwardRange',['../classpoly_1_1utils_1_1VForwardRange.html',1,'poly::utils']]],
-  ['visited0_214',['visited0',['../classpoly_1_1IR_1_1Node.html#ab88fb01bf0d225c479504fca26a9aa72',1,'poly::IR::Node']]],
-  ['visited1_215',['visited1',['../classpoly_1_1IR_1_1Node.html#a352818324cac83c87c3e03daf035d9d3',1,'poly::IR::Node']]]
+  ['value_272',['Value',['../classIR_1_1Value.html',1,'IR']]],
+  ['vcycleiterator_273',['VCycleIterator',['../classutils_1_1VCycleIterator.html',1,'utils']]],
+  ['vcyclerange_274',['VCycleRange',['../classutils_1_1VCycleRange.html',1,'utils']]],
+  ['vectorizationcosts_275',['VectorizationCosts',['../classIR_1_1cost_1_1VectorizationCosts.html',1,'IR::cost']]],
+  ['vectorizationfactor_276',['VectorizationFactor',['../structCostModeling_1_1VectorizationFactor.html',1,'CostModeling']]],
+  ['vectorized_5f_277',['vectorized_',['../structCostModeling_1_1ArrayTransform.html#adbb7d0e18d01a6225701ba73c27da3a3',1,'CostModeling::ArrayTransform']]],
+  ['vectorwidth_278',['VectorWidth',['../classIR_1_1cost_1_1VectorWidth.html',1,'IR::cost']]],
+  ['vforwarditerator_279',['VForwardIterator',['../classutils_1_1VForwardIterator.html',1,'utils']]],
+  ['vforwardrange_280',['VForwardRange',['../classutils_1_1VForwardRange.html',1,'utils']]],
+  ['visited0_281',['visited0',['../classIR_1_1Node.html#a85494883dadd8b082279efdd40fb3aee',1,'IR::Node']]],
+  ['visited1_282',['visited1',['../classIR_1_1Node.html#a3c9bbb72d4f830f861511cc1e5e2dc09',1,'IR::Node']]]
 ];

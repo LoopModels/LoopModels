@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['addloop_349',['addLoop',['../classpoly_1_1builder_1_1Builder.html#ae71b9cad1011a96c3cae05b3ebde8a46',1,'poly::builder::Builder']]],
-  ['addr_350',['Addr',['../classpoly_1_1IR_1_1Addr.html#a387ec0007fd2e88db1726d49a2bc867d',1,'poly::IR::Addr']]]
+  ['addloop_452',['addLoop',['../classbuilder_1_1Builder.html#a2d22c73779badd7518da854dfcd60fab',1,'builder::Builder']]],
+  ['addr_453',['Addr',['../classIR_1_1Addr.html#a0da076acd64c887dd9f87e198db750e6',1,'IR::Addr']]],
+  ['addusers_454',['addUsers',['../structCostModeling_1_1Register_1_1FutureUses.html#abffd026a41175392e79b3ccac4d8d983',1,'CostModeling::Register::FutureUses']]]
 ];

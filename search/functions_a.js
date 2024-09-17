@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['nodes_407',['nodes',['../classpoly_1_1IR_1_1Node.html#ad59cd2d020fb4d410c3dfd6c430c4e93',1,'poly::IR::Node']]]
+  ['mergemap_525',['mergeMap',['../classpoly_1_1DepPoly.html#a216e410eeb80e1da63e0956049b604ef',1,'poly::DepPoly']]],
+  ['mergeoperands_526',['mergeOperands',['../structIR_1_1MergingCost.html#a30b6e3e8f7fadf86fef5ddbe213e26e1',1,'IR::MergingCost']]]
 ];
