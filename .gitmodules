@@ -1,0 +1,3 @@
+[submodule "extern/Math"]
+	path = extern/Math
+	url = ../../LoopOptimization/Math

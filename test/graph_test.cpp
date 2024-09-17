@@ -1,5 +1,3 @@
-#include "Containers/BitSets.hpp"
-#include "Graphs/IndexGraphs.hpp"
 #include <algorithm>
 #include <concepts>
 #include <cstdint>
@@ -10,21 +8,24 @@
 #include <llvm/ADT/SmallVector.h>
 #include <ranges>
 #include <utility>
+#ifndef USE_MODULE
+#include "Math/Ranges.cxx"
+#include "Math/Indexing.cxx"
+#include "Graphs/IndexGraphs.cxx"
+#include "Containers/BitSets.cxx"
+#else
 
-namespace poly {
+import BitSet;
+import IndexGraph;
+import Indexing;
+import Range;
+#endif
+
 using containers::BitSet, math::Range, math::_;
 
 struct MockVertex {
   BitSet<> inNeighbors;
   BitSet<> outNeighbors;
-  bool visited{false};
-  bool visited2{false};
-  [[nodiscard]] auto wasVisited() const -> bool { return visited; }
-  void visit() { visited = true; }
-  void unVisit() { visited = false; }
-  [[nodiscard]] auto wasVisited2() const -> bool { return visited2; }
-  void visit2() { visited2 = true; }
-  void unVisit2() { visited2 = false; }
 };
 
 struct MockGraph {
@@ -52,11 +53,6 @@ struct MockGraph {
   }
   auto begin() { return vertices.begin(); }
   auto end() { return vertices.end(); }
-  [[nodiscard]] auto wasVisited(ptrdiff_t i) const -> bool {
-    return vertices[i].wasVisited();
-  }
-  void visit(ptrdiff_t i) { vertices[i].visit(); }
-  void unVisit(ptrdiff_t i) { vertices[i].unVisit(); }
   auto operator[](ptrdiff_t i) -> MockVertex & { return vertices[i]; }
   void connect(ptrdiff_t parent, ptrdiff_t child) {
     MockVertex &p{vertices[parent]}, &c{vertices[child]};
@@ -65,7 +61,7 @@ struct MockGraph {
   }
 };
 
-static_assert(graphs::AbstractIndexGraph<MockGraph>);
+static_assert(graph::AbstractIndexGraph<MockGraph>);
 
 // std::ranges::any_of not supported by libc++
 auto anyEquals(auto a, std::integral auto y) -> bool {
@@ -100,9 +96,9 @@ TEST(StronglyConnectedComponentsTest, BasicAssertions) {
   G.connect(4, 1);
   G.connect(5, 6);
   G.connect(6, 2);
-  graphs::print(G);
-  auto scc0 = graphs::stronglyConnectedComponents(G);
-  auto scc1 = graphs::stronglyConnectedComponents(G);
+  graph::print(G);
+  auto scc0 = graph::stronglyConnectedComponents(G);
+  auto scc1 = graph::stronglyConnectedComponents(G);
   EXPECT_EQ(scc0, scc1);
   for (auto &v : scc0) std::cout << "SCC: " << v << "\n";
   // NOTE: currently using inNeighbors instead of outNeighbors, so in
@@ -146,8 +142,8 @@ TEST(TopologicalSortTest, BasicAssertions) {
   G.connect(1, 3);
   G.connect(2, 3);
   G.connect(3, 4);
-  graphs::print(G);
-  auto ts = graphs::topologicalSort(G);
+  graph::print(G);
+  auto ts = graph::topologicalSort(G);
   EXPECT_EQ(ts.size(), G.getNumVertices());
   EXPECT_EQ(ts[0], 0);
   if (ts[1] == 1) {
@@ -159,4 +155,3 @@ TEST(TopologicalSortTest, BasicAssertions) {
   EXPECT_EQ(ts[3], 3);
   EXPECT_EQ(ts[4], 4);
 }
-} // namespace poly

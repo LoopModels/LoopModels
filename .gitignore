@@ -11,3 +11,4 @@ html/
 coverage.*
 coverage-final.json
 Testing
+compile_commands.json

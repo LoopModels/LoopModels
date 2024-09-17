@@ -1,18 +1,17 @@
 # Based on ModernCppStarter https://github.com/TheLartians/ModernCppStarter
 
 # 3.25 for SYSTEM support
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.28.2)
 
 project(
   LoopModels
   VERSION 0.1
-  LANGUAGES C CXX
-)
-# TODO: disable C when this is fixed: https://github.com/llvm/llvm-project/issues/53950
+  LANGUAGES C CXX)
+# TODO: disable C when this is fixed:
+# https://github.com/llvm/llvm-project/issues/53950
 set(OMIT_FRAME_POINTER
     "ReleaseOnly"
-    CACHE STRING "Omit frame pointers (ON/OFF/ReleaseOnly)"
-)
+    CACHE STRING "Omit frame pointers (ON/OFF/ReleaseOnly)")
 set_property(CACHE OMIT_FRAME_POINTER PROPERTY STRINGS ON OFF ReleaseOnly)
 
 # ---- Include guards ----
@@ -30,22 +29,23 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # ---- Add dependencies via CPM ----
 # see https://github.com/TheLartians/CPM.cmake for more info
 
-include(cmake/CPM.cmake)
+include(extern/Math/cmake/CPM.cmake)
 
 # PackageProject.cmake will be used to make our target installable
-CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
+cpmaddpackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 
 # ---- Dependencies ----
-# Here, we are preferring CPMFindPackage, as relying on system libraries can save a lot of compile
-# time.
+# Here, we are preferring CPMFindPackage, as relying on system libraries can
+# save a lot of compile time.
 # ---- LLVM ----
 
-# CPMFindPackage( NAME LLVM GIT_TAG llvmorg-15.0.6 GITHUB_REPOSITORY llvm/llvm-project OPTIONS
-# "LLVM_USE_SPLIT_DWARF ON" "LLVM_BUILD_LLVM_DYLIB ON" "LLVM_ENABLE_PROJECTS
-# clang;clang-tools-extra;lld;lldb;polly;pstl" "LLVM_ENABLE_RUNTIMES all" "LLVM_ENABLE_RTTI OFF"
-# "BUILD_SHARED_LIBS OFF" "LLVM_CCACHE_BUILD ON"  "LLVM_OPTIMIZED_TABLEGEN ON" "LLVM_ENABLE_LTO ON"
+# CPMFindPackage( NAME LLVM GIT_TAG llvmorg-15.0.6 GITHUB_REPOSITORY
+# llvm/llvm-project OPTIONS "LLVM_USE_SPLIT_DWARF ON" "LLVM_BUILD_LLVM_DYLIB ON"
+# "LLVM_ENABLE_PROJECTS clang;clang-tools-extra;lld;lldb;polly;pstl"
+# "LLVM_ENABLE_RUNTIMES all" "LLVM_ENABLE_RTTI OFF" "BUILD_SHARED_LIBS OFF"
+# "LLVM_CCACHE_BUILD ON"  "LLVM_OPTIMIZED_TABLEGEN ON" "LLVM_ENABLE_LTO ON"
 # "LLVM_ENABLE_Z3_SOLVER ON" )
-find_package(LLVM 16 REQUIRED CONFIG)
+find_package(LLVM 17 REQUIRED CONFIG)
 list(APPEND CMAKE_MODULE_PATH ${LLVM_CMAKE_DIR})
 # include(AddLLVM)
 include(${LLVM_DIR}/AddLLVM.cmake)
@@ -54,48 +54,47 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Found LLVM_CMAKE_DIR ${LLVM_CMAKE_DIR}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
-# # "LLVM_TARGETS_TO_BUILD X86;AArch64" # ---- google/benchmark ---- CPMFindPackage( NAME benchmark
-# GITHUB_REPOSITORY google/benchmark VERSION 1.7.1 OPTIONS "BENCHMARK_ENABLE_TESTING Off" )
-# if(benchmark_ADDED) # enable c++11 to avoid compilation errors set_target_properties(benchmark
-# PROPERTIES CXX_STANDARD 11) endif()
+# # "LLVM_TARGETS_TO_BUILD X86;AArch64" # ---- google/benchmark ----
+# CPMFindPackage( NAME benchmark GITHUB_REPOSITORY google/benchmark VERSION
+# 1.7.1 OPTIONS "BENCHMARK_ENABLE_TESTING Off" ) if(benchmark_ADDED) # enable
+# c++11 to avoid compilation errors set_target_properties(benchmark PROPERTIES
+# CXX_STANDARD 11) endif()
 
-# message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}") if(ENABLE_TEST_COVERAGE)
-# add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g -fprofile-arcs -ftest-coverage)
-# target_link_options(${PROJECT_NAME} PUBLIC -fprofile-arcs -ftest-coverage) message(STATUS "Lib
-# coverage enabled.") endif()
-
-CPMAddPackage(
-  NAME unordered_dense
-  GITHUB_REPOSITORY chriselrod/unordered_dense
-  GIT_TAG fnoexceptions
-)
+# message(STATUS "ENABLE_TEST_COVERAGE: ${ENABLE_TEST_COVERAGE}")
+# if(ENABLE_TEST_COVERAGE) add_compile_options(${PROJECT_NAME} PUBLIC -O0 -g
+# -fprofile-arcs -ftest-coverage) target_link_options(${PROJECT_NAME} PUBLIC
+# -fprofile-arcs -ftest-coverage) message(STATUS "Lib coverage enabled.")
+# endif()
 
 # ---- Add source files ----
 
-# Note: globbing sources is considered bad practice as CMake's generators may not detect new files
-# automatically. Keep that in mind when changing files, or explicitly mention them here.
-file(GLOB_RECURSE headers CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
-file(GLOB_RECURSE sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.cpp)
+# Note: globbing sources is considered bad practice as CMake's generators may
+# not detect new files automatically. Keep that in mind when changing files, or
+# explicitly mention them here.
+file(GLOB_RECURSE headers CONFIGURE_DEPENDS
+     ${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp)
+file(GLOB_RECURSE sources CONFIGURE_DEPENDS
+     ${CMAKE_CURRENT_SOURCE_DIR}/lib/*.cpp)
 
 # ---- Create library ----
 
-# Note: for header-only libraries change all PUBLIC flags to INTERFACE and create an interface
-# target: add_library(${PROJECT_NAME} INTERFACE)
+# Note: for header-only libraries change all PUBLIC flags to INTERFACE and
+# create an interface target: add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME} MODULE ${headers} ${sources})
 set(CXX_STANDARD_REQUIRED ON)
 set_target_properties(
   ${PROJECT_NAME}
-  PROPERTIES CXX_STANDARD 20
+  PROPERTIES CXX_STANDARD 23
              CXX_VISIBILITY_PRESET hidden
-             VISIBILITY_INLINES_HIDDEN ON
-)
+             VISIBILITY_INLINES_HIDDEN ON)
 target_compile_options(
-  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt -fstrict-overflow
-)
+  ${PROJECT_NAME} PRIVATE -fno-exceptions -fno-rtti -fstrict-aliasing -fno-plt
+                          -fstrict-overflow)
 if(OMIT_FRAME_POINTER STREQUAL "ReleaseOnly")
   target_compile_options(
-    ${PROJECT_NAME} PRIVATE "$<IF:$<CONFIG:Release>,-fomit-frame-pointer,-fno-omit-frame-pointer>"
-  )
+    ${PROJECT_NAME}
+    PRIVATE
+      "$<IF:$<CONFIG:Release>,-fomit-frame-pointer,-fno-omit-frame-pointer>")
 elseif(OMIT_FRAME_POINTER)
   target_compile_options(${PROJECT_NAME} PRIVATE -fomit-frame-pointer)
 else()
@@ -103,40 +102,41 @@ else()
 endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  target_compile_options(
-    ${PROJECT_NAME} PRIVATE -fno-semantic-interposition -fdiagnostics-color=always
-  )
+  target_compile_options(${PROJECT_NAME} PRIVATE -fno-semantic-interposition
+                                                 -fdiagnostics-color=always)
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   target_compile_options(${PROJECT_NAME} PRIVATE -fcolor-diagnostics)
 endif()
 
 # MSVC
-target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
+target_compile_options(${PROJECT_NAME}
+                       PUBLIC "$<$<COMPILE_LANG_AND_ID:CXX,MSVC>:/permissive->")
 
-FetchContent_Declare(
-  Math
-  GIT_REPOSITORY git@github.com:LoopModels/Math.git
-  GIT_TAG origin/main
+message(
+  STATUS
+    "Checking for existence of: ${PROJECT_SOURCE_DIR}/extern/Math/CMakeLists.txt"
 )
-FetchContent_MakeAvailable(Math)
+if(NOT EXISTS "${PROJECT_SOURCE_DIR}/extern/Math/CMakeLists.txt")
+  message(
+    FATAL_ERROR
+      "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again."
+  )
+endif()
 
+find_package(Boost 1.81.0 REQUIRED COMPONENTS headers)
 # Link dependencies
-target_link_libraries(${PROJECT_NAME} PRIVATE LLVM unordered_dense::unordered_dense Math)
+target_link_libraries(${PROJECT_NAME} PRIVATE LLVM Boost::headers Math)
 
 target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${LLVM_INCLUDE_DIRS})
 target_include_directories(
-  ${PROJECT_NAME} PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                          $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>
-)
+  ${PROJECT_NAME}
+  PRIVATE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+          $<INSTALL_INTERFACE:include/${PROJECT_NAME}-${PROJECT_VERSION}>)
 target_precompile_headers(
   ${PROJECT_NAME}
   PRIVATE
-  <algorithm>
-  <cassert>
-  <cmath>
-  <cstddef>
-  <cstdint>
-  <limits>
+  <boost/unordered/unordered_flat_map.hpp>
+  <boost/unordered/unordered_flat_set.hpp>
   <llvm/ADT/ArrayRef.h>
   <llvm/ADT/SmallPtrSet.h>
   <llvm/ADT/SmallVector.h>
@@ -166,25 +166,38 @@ target_precompile_headers(
   <llvm/Support/raw_ostream.h>
   <llvm/Transforms/Utils/LoopUtils.h>
   <llvm/Transforms/Utils/ScalarEvolutionExpander.h>
+  <algorithm>
+  <cassert>
+  <cmath>
+  <cstddef>
+  <cstdint>
+  <limits>
   <ranges>
-  <utility>
-)
+  <utility>)
 
 # ---- Create an installable target ----
 # this allows users to install and find the library via `find_package()`.
 
-# the location where the project's version header will be placed should match the project's regular
-# header paths
+# the location where the project's version header will be placed should match
+# the project's regular header paths
 string(TOLOWER ${PROJECT_NAME}/version.h VERSION_HEADER_LOCATION)
 
-packageProject(
-  NAME ${PROJECT_NAME}
-  VERSION ${PROJECT_VERSION}
-  NAMESPACE ${PROJECT_NAME}
-  BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  INCLUDE_DESTINATION include/${PROJECT_NAME}-${PROJECT_VERSION}
-  VERSION_HEADER "${VERSION_HEADER_LOCATION}"
-  COMPATIBILITY SameMinorVersion
-  DEPENDENCIES "LLVM 15.0.6"
-)
+packageproject(
+  NAME
+  ${PROJECT_NAME}
+  VERSION
+  ${PROJECT_VERSION}
+  NAMESPACE
+  ${PROJECT_NAME}
+  BINARY_DIR
+  ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR
+  ${PROJECT_SOURCE_DIR}/include
+  INCLUDE_DESTINATION
+  include/${PROJECT_NAME}-${PROJECT_VERSION}
+  VERSION_HEADER
+  "${VERSION_HEADER_LOCATION}"
+  COMPATIBILITY
+  SameMinorVersion
+  DEPENDENCIES
+  "LLVM 17.0.1")

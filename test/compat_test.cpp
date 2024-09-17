@@ -1,20 +1,32 @@
-#include "Math/Array.hpp"
-#include "Polyhedra/Loops.hpp"
-#include "Support/OStream.hpp"
-#include "TestUtilities.hpp"
-#include <Math/Constraints.hpp>
-#include <Math/Math.hpp>
-#include <Utilities/MatrixStringParse.hpp>
-#include <cstdint>
-#include <cstdio>
 #include <gtest/gtest.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
+#ifndef USE_MODULE
+#include "IR/IR.cxx"
+#include "Math/Array.cxx"
+#include "Math/Constraints.cxx"
+#include "Support/OStream.cxx"
+#include "TestUtilities.cxx"
+#include "Utilities/MatrixStringParse.cxx"
+#include "Utilities/Valid.cxx"
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <iostream>
 #include <memory>
+#else
 
-namespace poly {
+import Array;
+import ArrayParse;
+import Constraints;
+import IR;
+import OStream;
+import STL;
+import TestUtilities;
+import Valid;
+#endif
 
-using math::IntMatrix, utils::operator""_mat;
+using math::IntMatrix, math::DenseMatrix, utils::operator""_mat;
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(TrivialPruneBounds0, BasicAssertions) {
@@ -41,16 +53,16 @@ TEST(TrivialPruneBounds0, BasicAssertions) {
   // m >= 0
   // -2 + M - m >= 0
   // 1 + m >= 0
-  auto A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
+  IntMatrix<> A{"[0 1 0; -1 1 -1; 0 0 1; -2 1 -1; 1 0 1]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 1);
   poly::Loop *aff = tlf.getLoopNest(0);
   aff->pruneBounds();
-  llvm::errs() << *aff << "\naff.A = " << aff->getA() << "\n";
+  std::cout << *aff << "\naff.A = " << aff->getA() << "\n";
   // M >= 0 is redundant
   // because M - 1 >= m >= 0
   // hence, we should be left with 1 bound (-2 + M - m >= 0)
-  EXPECT_EQ(unsigned(aff->getA().numRow()), 1);
+  EXPECT_EQ(ptrdiff_t(aff->getA().numRow()), 1);
   EXPECT_EQ(aff->getA(), "[-2 1 -1]"_mat);
 }
 
@@ -60,7 +72,8 @@ TEST(TrivialPruneBounds1, BasicAssertions) {
   // I >= 1
   // i <= J - 1
   // J >= 1
-  auto A{"[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]"_mat};
+  IntMatrix<> A{
+    "[-1 0 0 0 1 0; -1 1 0 0 0 0; -1 0 1 0 -1 0; -1 0 1 0 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
   poly::Loop *aff = tlf.getLoopNest(0);
@@ -68,37 +81,37 @@ TEST(TrivialPruneBounds1, BasicAssertions) {
 #ifndef NDEBUG
   aff->dump();
 #endif
-  llvm::errs() << "aff.A = " << aff->getA() << "\n";
+  std::cout << "aff.A = " << aff->getA() << "\n";
   // we expect J >= 1 to be dropped
   // because J >= i + 1 >= 2
   // because i >= 1
-  EXPECT_EQ(aff->getA().numRow(), 3);
+  EXPECT_EQ(ptrdiff_t(aff->getA().numRow()), 3);
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(LessTrivialPruneBounds, BasicAssertions) {
 
   // Ax * b >= 0
-  IntMatrix A{"[-3 1 1 1 -1 -1 -1; "
-              "0 0 0 0 1 1 1; "
-              "-2 1 0 1 -1 0 -1; "
-              "0 0 0 0 1 0 1; "
-              "0 0 0 0 0 1 0; "
-              "-1 0 1 0 0 -1 0; "
-              "-1 1 0 0 -1 0 0; "
-              "0 0 0 0 1 0 0; "
-              "0 0 0 0 0 0 1; "
-              "-1 0 0 1 0 0 -1]"_mat};
+  IntMatrix<> A{"[-3 1 1 1 -1 -1 -1; "
+                "0 0 0 0 1 1 1;"
+                " -2 1 0 1 -1 0 -1;"
+                " 0 0 0 0 1 0 1;"
+                "0 0 0 0 0 1 0;"
+                "-1 0 1 0 0 -1 0;"
+                "-1 1 0 0 -1 0 0;"
+                "0 0 0 0 1 0 0;"
+                "0 0 0 0 0 0 1;"
+                "-1 0 0 1 0 0 -1]"_mat};
 
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 3);
   poly::Loop &aff = *tlf.getLoopNest(0);
 
   aff.pruneBounds();
-  llvm::errs() << "LessTrival test Bounds pruned:\n";
+  std::cout << "LessTrivial test Bounds pruned:\n";
 #ifndef NDEBUG
   aff.dump();
 #endif
-  llvm::errs() << "aff.A = " << aff.getA() << "\n";
+  std::cout << "aff.A = " << aff.getA() << "\n";
   EXPECT_EQ(aff.getNumCon(), 3);
   auto loop2Count = countSigns(aff.getA(), 2 + aff.getNumSymbols());
   EXPECT_EQ(loop2Count[0], 1);
@@ -115,42 +128,42 @@ TEST(LessTrivialPruneBounds, BasicAssertions) {
 
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(AffineTest0, BasicAssertions) {
-  llvm::errs() << "Starting affine test 0\n";
+  std::cout << "Starting affine test 0\n";
   // the loop is
   // for m in 0:M-1, n in 0:N-1, k in n+1:N-1
   //
-  IntMatrix A{"[-1 1 0 -1 0 0; "   // m <= M - 1
-              "0 0 0 1 0 0; "      // m >= 0
-              "-1 0 1 0 -1 0; "    // n <= N - 1
-              "0 0 0 0 1 0; "      // n >= 0
-              "-1 0 1 0 0 -1; "    // k <= N - 1
-              "-1 0 0 0 -1 1; "    // k >= n + 1
-              "0 1 0 0 0 0; "      // M >= 0
-              "0 0 1 0 0 0]"_mat}; // N >= 0
+  IntMatrix<> A{"[-1 1 0 -1 0 0; "   // m <= M - 1
+                "0 0 0 1 0 0; "      // m >= 0
+                "-1 0 1 0 -1 0; "    // n <= N - 1
+                "0 0 0 0 1 0; "      // n >= 0
+                "-1 0 1 0 0 -1; "    // k <= N - 1
+                "-1 0 0 0 -1 1; "    // k >= n + 1
+                "0 1 0 0 0 0; "      // M >= 0
+                "0 0 1 0 0 0]"_mat}; // N >= 0
 
   TestLoopFunction tlf;
-  llvm::errs() << "About to construct affine obj\n";
+  std::cout << "About to construct affine obj\n";
   tlf.addLoop(std::move(A), 3);
   poly::Loop &aff = *tlf.getLoopNest(0);
   aff.pruneBounds();
   EXPECT_EQ(aff.getA().numRow(), 3);
 
-  llvm::errs() << "Constructed affine obj\n";
-  llvm::errs() << "About to run first compat test\n";
-  llvm::errs() << "aff.getA() = " << aff.getA();
+  std::cout << "Constructed affine obj\n";
+  std::cout << "About to run first compat test\n";
+  std::cout << "aff.getA() = " << aff.getA();
   EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 0, false));
   EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 0, true));
   EXPECT_TRUE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, false));
-  llvm::errs() << "About to run second compat test\n";
+  std::cout << "About to run second compat test\n";
   EXPECT_FALSE(aff.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, true));
 #ifndef NDEBUG
   aff.dump();
 #endif
-  llvm::errs() << "About to run first set of bounds tests\n";
-  llvm::errs() << "\nPermuting loops 1 and 2\n";
-  utils::OwningArena<> allocator;
-  utils::NotNull<poly::Loop> affp021ptr{
-    aff.rotate(allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
+  std::cout << "About to run first set of bounds tests\n";
+  std::cout << "\nPermuting loops 1 and 2\n";
+  alloc::OwningArena<> allocator;
+  utils::Valid<poly::Loop> affp021ptr{
+    aff.rotate(&allocator, "[1 0 0; 0 0 1; 0 1 0]"_mat, nullptr)};
   poly::Loop &affp021 = *affp021ptr;
   // Now that we've swapped loops 1 and 2, we should have
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
@@ -159,29 +172,28 @@ TEST(AffineTest0, BasicAssertions) {
 #endif
   // For reference, the permuted loop bounds are:
   // for m in 0:M-1, k in 1:N-1, n in 0:k-1
-  llvm::errs() << "Checking if the inner most loop iterates when adjusting "
-                  "outer loops:"
-               << "\n";
-  llvm::errs() << "Constructed affine obj\n";
-  llvm::errs() << "About to run first compat test\n";
-  EXPECT_FALSE(affp021.zeroExtraItersUponExtending(tlf.getAlloc(), 1, false));
-  llvm::errs() << "About to run second compat test\n";
-  EXPECT_TRUE(affp021.zeroExtraItersUponExtending(tlf.getAlloc(), 1, true));
+  std::cout << "Checking if the inner most loop iterates when adjusting "
+               "outer loops:\n";
+  std::cout << "Constructed affine obj\n";
+  std::cout << "About to run first compat test\n";
+  EXPECT_FALSE(affp021.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, false));
+  std::cout << "About to run second compat test\n";
+  EXPECT_TRUE(affp021.zeroExtraItersUponExtending(*tlf.getAlloc(), 1, true));
 
   // affp021.zeroExtraIterationsUponExtending(poset, 1, )
 }
 // NOLINTNEXTLINE(modernize-use-trailing-return-type)
 TEST(NonUnimodularExperiment, BasicAssertions) {
-  llvm::errs() << "Starting affine test 1\n";
-  IntMatrix A{"[0 2 1 -1; "
-              "-2 0 -1 1; "
-              "0 2 1 1; "
-              "-2 0 -1 -1; "
-              " 0 1 0 0]"_mat};
+  std::cout << "Starting affine test 1\n";
+  IntMatrix<> A{"[0 2 1 -1; "
+                "-2 0 -1 1; "
+                "0 2 1 1; "
+                "-2 0 -1 -1; "
+                " 0 1 0 0]"_mat};
   TestLoopFunction tlf;
   tlf.addLoop(std::move(A), 2);
   poly::Loop &aff = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
-  llvm::errs() << "Original order:\n";
+  std::cout << "Original order:\n";
 #ifndef NDEBUG
   aff.dump();
 #endif
@@ -198,13 +210,13 @@ TEST(NonUnimodularExperiment, BasicAssertions) {
   tlf.addLoop(std::move(B), 2);
   poly::Loop &aff2 = *tlf.getLoopNest(tlf.getNumLoopNests() - 1);
   EXPECT_FALSE(aff2.isEmpty());
-  OwningArena<> allocator;
-  NotNull<poly::Loop> affp10{aff2.rotate(allocator, "[0 1; 1 0]"_mat, nullptr)};
+  alloc::OwningArena<> allocator;
+  utils::Valid<poly::Loop> affp10{
+    aff2.rotate(&allocator, "[0 1; 1 0]"_mat, nullptr)};
 
-  llvm::errs() << "Swapped order:\n";
+  std::cout << "Swapped order:\n";
 #ifndef NDEBUG
   affp10->dump();
 #endif
   EXPECT_FALSE(affp10->isEmpty());
 }
-} // namespace poly

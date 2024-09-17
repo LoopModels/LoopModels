@@ -1,4 +1,3 @@
-#include "../include/TurboLoop.hpp"
 #include <cstdio>
 #include <llvm/ADT/APInt.h>
 #include <llvm/ADT/DepthFirstIterator.h>
@@ -27,10 +26,16 @@
 #include <llvm/IR/IntrinsicInst.h>
 #include <llvm/IR/PassManager.h>
 #include <llvm/Pass.h>
+#include <llvm/Passes/OptimizationLevel.h>
 #include <llvm/Passes/PassBuilder.h>
 #include <llvm/Passes/PassPlugin.h>
+#include <llvm/Support/Compiler.h>
 #include <llvm/Support/FormatVariadic.h>
 #include <llvm/Support/raw_ostream.h>
+
+import TurboLoop;
+import LLVMFrontend;
+
 // #include <llvm/Passes/OptimizationLevel.h>
 // #include <llvm/Support/Casting.h>
 // #include <llvm/Transforms/Scalar/IndVarSimplify.h>
@@ -54,9 +59,9 @@ public:
   TurboLoopPass(TurboLoopPass &&) = default;
 
   static auto __attribute__((visibility("default")))
-  run(llvm::Function &F, llvm::FunctionAnalysisManager &FAM)
-    -> llvm::PreservedAnalyses {
-    poly::TurboLoop tl{F, FAM};
+  run(llvm::Function &F,
+      llvm::FunctionAnalysisManager &FAM) -> llvm::PreservedAnalyses {
+    TurboLoop tl{F, FAM};
     return tl.run();
   }
 };

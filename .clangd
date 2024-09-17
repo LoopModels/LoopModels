@@ -1,12 +1,19 @@
 Diagnostics:
   ClangTidy:
-    Add: [performance*, modernize*, readability*, clang-diagnostic-*, clang-analyzer-*, bugprone-*, cpp-core-guidelines-*, cert-*, misc-*, llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*]
-    Remove: [bugprone-easily-swappable-parameters, readability-braces-around-statements,readability-identifier-length,readability-isolate-declaration,readability-implicit-bool-conversion,readability-magic-numbers,readability-function-cognitive-complexity,readability-named-parameter,misc-non-private-member-variables-in-classes,modernize-avoid-c-arrays]
+    FastCheckFilter: Loose
+    Add: [performance*, modernize*, readability*, clang-diagnostic-*, clang-analyzer-*, bugprone-*, cpp-core-guidelines-*, cert-*, misc-*, llvm-namespace-comment,llvm-prefer-isa-or-dyn-cast-in-conditionals,portability-*,bugprone-unused-local-non-trivial-variable]
+    Remove: [bugprone-easily-swappable-parameters, readability-braces-around-statements,readability-identifier-length,readability-isolate-declaration,readability-implicit-bool-conversion,readability-magic-numbers,readability-function-cognitive-complexity,readability-named-parameter,misc-non-private-member-variables-in-classes,modernize-avoid-c-arrays,bugprone-suspicious-include]
     CheckOptions:
-      readability-identifier-naming.LocalVariableCase: camelBack
+      bugprone-unused-local-non-trivial-variable.IncludeTypes: '.*'
+      bugprone-unused-local-non-trivial-variable.ExcludeTypes: '::alloc::Arena<>::ScopeLifetime.*', '::CostModeling::Cache::CacheOptimizer::PopBack.*'
+      readability-avoid-return-with-void-value.StrictMode: false
+      readability-identifier-naming.LocalVariableCase: lower_case
       readability-identifier-naming.LocalVariableIgnoredRegexp: "^[A-Za-z0-9]{1,3}$"
       readability-identifier-naming.ClassCase: CamelCase
       readability-identifier-naming.ClassMethodCase: camelBack
+      readability-identifier-naming.MemberCase: lower_case
+      readability-identifier-naming.MemberSuffix: _
   UnusedIncludes: Strict
+  MissingIncludes: Strict
 Hover:
   ShowAKA: Yes

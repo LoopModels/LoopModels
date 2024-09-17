@@ -72,7 +72,7 @@ CXX=g++ CXXFLAGS="" cmake -G Ninja -S benchmark buildgcc/benchmark -DCMAKE_BUILD
 cmake --build buildgcc/benchmark
 buildgcc/benchmark/LoopModelsBenchmarks --benchmark_perf_counters=CYCLES,INSTRUCTIONS,CACHE-MISSES
 ```
-Only up to 3 arguments may be passed to `--benchmark_perf_counter` at a time.
+Only up to 3 arguments may be passed to `--benchmark_perf_counters` at a time.
 Additional options include `BRANCHES`, and architecture-specific event names like you'd use with `perf`.
 Some options you can try include:
 `cpu-cycles`,`task-clock`,`instructions`,`branch-instructions`,`branch-misses`, `L1-dcache-load-misses`, `L1-dcache-loads`, `cache-misses`, `cache-references`.

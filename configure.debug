@@ -1,6 +1,0 @@
-#!/bin/sh
-
-# sanitizers='Undefined'
-sanitizers='Address;Undefined'
-CXXFLAGS="" CXX=g++ cmake -S test -B buildgcc/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER=$sanitizers -DENABLE_TEST_COVERAGE=1 "$@"
-CXXFLAGS="" CXX=clang++ cmake -S test -B buildclang/test -DCMAKE_BUILD_TYPE=Debug -DUSE_SANITIZER=$sanitizers "$@"
