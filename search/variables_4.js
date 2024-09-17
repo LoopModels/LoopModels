@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['naturaldepth_390',['naturalDepth',['../classpoly_1_1IR_1_1Node.html#abba41fed05889ab36bc3ee55a9965ac8',1,'poly::IR::Node']]]
+  ['usedbyloop_432',['usedByLoop',['../classpoly_1_1IR_1_1Node.html#a1b10c04d2cb182554f0b3ea02e169e60',1,'poly::IR::Node']]]
 ];

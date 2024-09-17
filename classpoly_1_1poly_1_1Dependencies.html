@@ -67,7 +67,6 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classpoly_1_1poly_1_1Dependencies-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -77,14 +76,10 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Classes</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies_1_1Ref.html">Ref</a></td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependencies_1_1ActiveCheck.html">ActiveCheck</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:a4b536487d7fb8e198e82259b909a4559"><td class="memItemLeft" align="right" valign="top"><a id="a4b536487d7fb8e198e82259b909a4559"></a>
-using&#160;</td><td class="memItemRight" valign="bottom"><b>ID</b> = <a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">Dependence::ID</a></td></tr>
-<tr class="separator:a4b536487d7fb8e198e82259b909a4559"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1poly_1_1Dependencies_1_1Getter.html">Getter</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -103,7 +98,10 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator=</
 <tr class="memitem:a03507c86fa7ff21c3a7267de3c76db28"><td class="memItemLeft" align="right" valign="top"><a id="a03507c86fa7ff21c3a7267de3c76db28"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>size</b> () const noexcept -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a03507c86fa7ff21c3a7267de3c76db28"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad261426ea6c9a40cc734eccd7d197a7"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">removeEdge</a> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> id)</td></tr>
+<tr class="memitem:ad9516af5ff7c211fa05e05c18ce2aa0f"><td class="memItemLeft" align="right" valign="top"><a id="ad9516af5ff7c211fa05e05c18ce2aa0f"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>clear</b> ()</td></tr>
+<tr class="separator:ad9516af5ff7c211fa05e05c18ce2aa0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad261426ea6c9a40cc734eccd7d197a7"><td class="memItemLeft" align="right" valign="top">constexpr void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">removeEdge</a> (ID id)</td></tr>
 <tr class="separator:aad261426ea6c9a40cc734eccd7d197a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3d8f709b24c65bff0f1698d73bb886da"><td class="memItemLeft" align="right" valign="top"><a id="a3d8f709b24c65bff0f1698d73bb886da"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOutEdge</b> (int32_t id)</td></tr>
@@ -111,9 +109,22 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeOutEd
 <tr class="memitem:a3b8ca1770abf3082fecc8c7d7a26ea83"><td class="memItemLeft" align="right" valign="top"><a id="a3b8ca1770abf3082fecc8c7d7a26ea83"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>removeInEdge</b> (int32_t id)</td></tr>
 <tr class="separator:a3b8ca1770abf3082fecc8c7d7a26ea83"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6e5101f6b6eaf454395a012ba8d13597"><td class="memItemLeft" align="right" valign="top"><a id="a6e5101f6b6eaf454395a012ba8d13597"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>get</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
-<tr class="separator:a6e5101f6b6eaf454395a012ba8d13597"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab651adafc629aa903042ab1b0abb05a0"><td class="memItemLeft" align="right" valign="top"><a id="ab651adafc629aa903042ab1b0abb05a0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator[]</b> (ID i) -&gt; <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
+<tr class="separator:ab651adafc629aa903042ab1b0abb05a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ace7d1535c539260b5d29eae39ffee7f7"><td class="memItemLeft" align="right" valign="top"><a id="ace7d1535c539260b5d29eae39ffee7f7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#ace7d1535c539260b5d29eae39ffee7f7">get</a> (ID i) -&gt; <a class="el" href="structpoly_1_1poly_1_1Dependence.html">Dependence</a></td></tr>
+<tr class="memdesc:ace7d1535c539260b5d29eae39ffee7f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Like <code>operator[]</code>, but maybe nicer to use with pointers? <br /></td></tr>
+<tr class="separator:ace7d1535c539260b5d29eae39ffee7f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b0ec1f7c82eed2d0e80da374f86ac28"><td class="memItemLeft" align="right" valign="top"><a id="a1b0ec1f7c82eed2d0e80da374f86ac28"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (Valid&lt; Arena&lt;&gt;&gt; alloc, Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y)</td></tr>
+<tr class="separator:a1b0ec1f7c82eed2d0e80da374f86ac28"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8ce591dfcc3e2f44846e1c401cea4bd"><td class="memItemLeft" align="right" valign="top"><a id="ab8ce591dfcc3e2f44846e1c401cea4bd"></a>
+void&#160;</td><td class="memItemRight" valign="bottom"><b>copyDependencies</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *src, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *dst)</td></tr>
+<tr class="separator:ab8ce591dfcc3e2f44846e1c401cea4bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad7902d4050395593fbf3c248211558b5"><td class="memItemLeft" align="right" valign="top"><a id="ad7902d4050395593fbf3c248211558b5"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc, Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; store) -&gt; Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
+<tr class="separator:ad7902d4050395593fbf3c248211558b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae128095c1d8f986609a20172396cb456"><td class="memItemLeft" align="right" valign="top"><a id="ae128095c1d8f986609a20172396cb456"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outEdges</b> () -&gt; MutPtrVector&lt; int32_t &gt;</td></tr>
 <tr class="separator:ae128095c1d8f986609a20172396cb456"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -126,124 +137,40 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outEdges</b
 <tr class="memitem:a11a90869629c69628199efafccffccbe"><td class="memItemLeft" align="right" valign="top"><a id="a11a90869629c69628199efafccffccbe"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inEdges</b> () const -&gt; PtrVector&lt; int32_t &gt;</td></tr>
 <tr class="separator:a11a90869629c69628199efafccffccbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca2cb6199270fcc860a4d5c4aae2abf0"><td class="memItemLeft" align="right" valign="top"><a id="aca2cb6199270fcc860a4d5c4aae2abf0"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *&amp;</td></tr>
-<tr class="separator:aca2cb6199270fcc860a4d5c4aae2abf0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3b119ae4271a2b9ecfad0355c2287e5"><td class="memItemLeft" align="right" valign="top"><a id="aa3b119ae4271a2b9ecfad0355c2287e5"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>output</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *</td></tr>
-<tr class="separator:aa3b119ae4271a2b9ecfad0355c2287e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a232aa46d5f637bef6c379c1fc71ee9ab"><td class="memItemLeft" align="right" valign="top"><a id="a232aa46d5f637bef6c379c1fc71ee9ab"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *&amp;</td></tr>
-<tr class="separator:a232aa46d5f637bef6c379c1fc71ee9ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50fa409c7a72682e54695c7c5396d0c9"><td class="memItemLeft" align="right" valign="top"><a id="a50fa409c7a72682e54695c7c5396d0c9"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>input</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *</td></tr>
-<tr class="separator:a50fa409c7a72682e54695c7c5396d0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa6df899080ebebb45beb6a75135769ee"><td class="memItemLeft" align="right" valign="top"><a id="aa6df899080ebebb45beb6a75135769ee"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nextOut</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
-<tr class="separator:aa6df899080ebebb45beb6a75135769ee"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae1e809cef240bf7237c4bff30d6fd342"><td class="memItemLeft" align="right" valign="top"><a id="ae1e809cef240bf7237c4bff30d6fd342"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>prevOut</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
-<tr class="separator:ae1e809cef240bf7237c4bff30d6fd342"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a46f4728f4ab198fe73b8aff5fd15c68a"><td class="memItemLeft" align="right" valign="top"><a id="a46f4728f4ab198fe73b8aff5fd15c68a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>nextIn</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
-<tr class="separator:a46f4728f4ab198fe73b8aff5fd15c68a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aac8ee70dbfc69468e55584526afc35e7"><td class="memItemLeft" align="right" valign="top"><a id="aac8ee70dbfc69468e55584526afc35e7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>prevIn</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
-<tr class="separator:aac8ee70dbfc69468e55584526afc35e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca35e24443994d3de051055b009f1694"><td class="memItemLeft" align="right" valign="top"><a id="aca35e24443994d3de051055b009f1694"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depSatBnd</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; std::array&lt; Valid&lt; math::Simplex &gt;, 2 &gt; &amp;</td></tr>
-<tr class="separator:aca35e24443994d3de051055b009f1694"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a941753105fe7b4ee92f58ea5e02fe522"><td class="memItemLeft" align="right" valign="top"><a id="a941753105fe7b4ee92f58ea5e02fe522"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>revTimeEdge</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; int32_t &amp;</td></tr>
-<tr class="separator:a941753105fe7b4ee92f58ea5e02fe522"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a90d355295c43d9b7b37d5ed32ef734c4"><td class="memItemLeft" align="right" valign="top"><a id="a90d355295c43d9b7b37d5ed32ef734c4"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>revTimeEdge</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; int32_t</td></tr>
-<tr class="separator:a90d355295c43d9b7b37d5ed32ef734c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a35aa8ae3cf5531396f377e1f19bf3507"><td class="memItemLeft" align="right" valign="top"><a id="a35aa8ae3cf5531396f377e1f19bf3507"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depPoly</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> *&amp;</td></tr>
-<tr class="separator:a35aa8ae3cf5531396f377e1f19bf3507"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac2bf33ce868f12af74a1b99a39513545"><td class="memItemLeft" align="right" valign="top"><a id="ac2bf33ce868f12af74a1b99a39513545"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depSatBnd</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; std::array&lt; Valid&lt; math::Simplex &gt;, 2 &gt;</td></tr>
-<tr class="separator:ac2bf33ce868f12af74a1b99a39513545"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae46c4c0e70319c7ba6f68947dc60aa7f"><td class="memItemLeft" align="right" valign="top"><a id="ae46c4c0e70319c7ba6f68947dc60aa7f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>depPoly</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; <a class="el" href="classpoly_1_1poly_1_1DepPoly.html">DepPoly</a> *</td></tr>
-<tr class="separator:ae46c4c0e70319c7ba6f68947dc60aa7f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adc9547f94824eea1dcd6bcefb829387a"><td class="memItemLeft" align="right" valign="top"><a id="adc9547f94824eea1dcd6bcefb829387a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevelPair</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) -&gt; std::array&lt; uint8_t, 2 &gt; &amp;</td></tr>
-<tr class="separator:adc9547f94824eea1dcd6bcefb829387a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac30d112000ea1395980d4dc0d3ecc65a"><td class="memItemLeft" align="right" valign="top"><a id="ac30d112000ea1395980d4dc0d3ecc65a"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevelPair</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; std::array&lt; uint8_t, 2 &gt;</td></tr>
-<tr class="separator:ac30d112000ea1395980d4dc0d3ecc65a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a660df35f574e19796b91c5d48c9b1ba8"><td class="memItemLeft" align="right" valign="top"><a id="a660df35f574e19796b91c5d48c9b1ba8"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>satLevel</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const -&gt; uint8_t</td></tr>
-<tr class="separator:a660df35f574e19796b91c5d48c9b1ba8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afa4087edfbec71fe69b1cccc21019981"><td class="memItemLeft" align="right" valign="top"><a id="afa4087edfbec71fe69b1cccc21019981"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isSat</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i, unsigned depth) const -&gt; uint8_t</td></tr>
-<tr class="separator:afa4087edfbec71fe69b1cccc21019981"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aab1af8471dd6eceb16e44cc90bd9ca9f"><td class="memItemLeft" align="right" valign="top"><a id="aab1af8471dd6eceb16e44cc90bd9ca9f"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isActive</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i, unsigned depth) const -&gt; uint8_t</td></tr>
-<tr class="separator:aab1af8471dd6eceb16e44cc90bd9ca9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a615f64008b9af532a006d52729c31b06"><td class="memItemLeft" align="right" valign="top"><a id="a615f64008b9af532a006d52729c31b06"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMeta</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) noexcept -&gt; uint8_t &amp;</td></tr>
-<tr class="separator:a615f64008b9af532a006d52729c31b06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e4124481e31cf734e638dd43275f90e"><td class="memItemLeft" align="right" valign="top"><a id="a7e4124481e31cf734e638dd43275f90e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getMeta</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const noexcept -&gt; uint8_t</td></tr>
-<tr class="separator:a7e4124481e31cf734e638dd43275f90e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2725ea8c326342847f365407926694dc"><td class="memItemLeft" align="right" valign="top"><a id="a2725ea8c326342847f365407926694dc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPeel</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) noexcept -&gt; uint8_t &amp;</td></tr>
-<tr class="separator:a2725ea8c326342847f365407926694dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac160ac5bb257dbc2282d4cc56214b007"><td class="memItemLeft" align="right" valign="top"><a id="ac160ac5bb257dbc2282d4cc56214b007"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPeel</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const noexcept -&gt; uint8_t</td></tr>
-<tr class="separator:ac160ac5bb257dbc2282d4cc56214b007"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a545c8c8ce99ef96bceb622ad61af09a8"><td class="memItemLeft" align="right" valign="top"><a id="a545c8c8ce99ef96bceb622ad61af09a8"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>isForward</b> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> i) const noexcept -&gt; bool</td></tr>
-<tr class="separator:a545c8c8ce99ef96bceb622ad61af09a8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad75ee7eedc9e93e8281d6d16b85d8934"><td class="memItemLeft" align="right" valign="top"><a id="ad75ee7eedc9e93e8281d6d16b85d8934"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>check</b> (Arena&lt;&gt; *alloc, Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; x, Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; y)</td></tr>
-<tr class="separator:ad75ee7eedc9e93e8281d6d16b85d8934"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab8ce591dfcc3e2f44846e1c401cea4bd"><td class="memItemLeft" align="right" valign="top"><a id="ab8ce591dfcc3e2f44846e1c401cea4bd"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>copyDependencies</b> (<a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *src, <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> *dst)</td></tr>
-<tr class="separator:ab8ce591dfcc3e2f44846e1c401cea4bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad7902d4050395593fbf3c248211558b5"><td class="memItemLeft" align="right" valign="top"><a id="ad7902d4050395593fbf3c248211558b5"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>reload</b> (Arena&lt;&gt; *alloc, Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt; store) -&gt; Valid&lt; <a class="el" href="classpoly_1_1IR_1_1Addr.html">IR::Addr</a> &gt;</td></tr>
-<tr class="separator:ad7902d4050395593fbf3c248211558b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1df41b65ea49d51ad80b0f72c8912865"><td class="memItemLeft" align="right" valign="top"><a id="a1df41b65ea49d51ad80b0f72c8912865"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIDs</b> (int32_t id) const</td></tr>
-<tr class="separator:a1df41b65ea49d51ad80b0f72c8912865"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a132607ea2fbb25d1dcfb8a629b6bf266"><td class="memItemLeft" align="right" valign="top"><a id="a132607ea2fbb25d1dcfb8a629b6bf266"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIDs</b> (int32_t id) const</td></tr>
-<tr class="separator:a132607ea2fbb25d1dcfb8a629b6bf266"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7e30dcace04e8fe83406dffd04bb90df"><td class="memItemLeft" align="right" valign="top"><a id="a7e30dcace04e8fe83406dffd04bb90df"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdgeTransform</b> () const</td></tr>
-<tr class="separator:a7e30dcace04e8fe83406dffd04bb90df"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4b82d06930fe0ebbfea5f477ee594ebc"><td class="memItemLeft" align="right" valign="top"><a id="a4b82d06930fe0ebbfea5f477ee594ebc"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (int32_t id) const</td></tr>
-<tr class="separator:a4b82d06930fe0ebbfea5f477ee594ebc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63dc977186eea3d1b34e268b09085c9b"><td class="memItemLeft" align="right" valign="top"><a id="a63dc977186eea3d1b34e268b09085c9b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (int32_t id) const</td></tr>
-<tr class="separator:a63dc977186eea3d1b34e268b09085c9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3d7b09c827347c0977488311ac449c97"><td class="memItemLeft" align="right" valign="top"><a id="a3d7b09c827347c0977488311ac449c97"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>activeFilter</b> (int depth) const</td></tr>
-<tr class="separator:a3d7b09c827347c0977488311ac449c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af20f07bec6386eb89d37cd6b16a470ec"><td class="memItemLeft" align="right" valign="top"><a id="af20f07bec6386eb89d37cd6b16a470ec"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIDs</b> (int32_t id) const -&gt; <a class="el" href="classpoly_1_1utils_1_1VForwardRange.html">utils::VForwardRange</a></td></tr>
+<tr class="separator:af20f07bec6386eb89d37cd6b16a470ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc0d6ca8ff37b6011d83647f3c180ad0"><td class="memItemLeft" align="right" valign="top"><a id="adc0d6ca8ff37b6011d83647f3c180ad0"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIDs</b> (int32_t id) const -&gt; <a class="el" href="classpoly_1_1utils_1_1VForwardRange.html">utils::VForwardRange</a></td></tr>
+<tr class="separator:adc0d6ca8ff37b6011d83647f3c180ad0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a509ac4c6465de65f259eacc16267c156"><td class="memItemLeft" align="right" valign="top"><a id="a509ac4c6465de65f259eacc16267c156"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getEdgeTransform</b> ()</td></tr>
+<tr class="separator:a509ac4c6465de65f259eacc16267c156"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a44076d7859b40c525e94d9d8f8a2ba3e"><td class="memItemLeft" align="right" valign="top"><a id="a44076d7859b40c525e94d9d8f8a2ba3e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (int32_t id)</td></tr>
+<tr class="separator:a44076d7859b40c525e94d9d8f8a2ba3e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c21e4eb124ec2c28529d30c2939af42"><td class="memItemLeft" align="right" valign="top"><a id="a5c21e4eb124ec2c28529d30c2939af42"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (int32_t id)</td></tr>
+<tr class="separator:a5c21e4eb124ec2c28529d30c2939af42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab8855bda0c5d51a85b4bab9be7cef49b"><td class="memItemLeft" align="right" valign="top"><a id="ab8855bda0c5d51a85b4bab9be7cef49b"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>activeFilter</b> (int depth0)</td></tr>
+<tr class="separator:ab8855bda0c5d51a85b4bab9be7cef49b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a80861025098c83668d856fa4bf8121f0"><td class="memItemLeft" align="right" valign="top"><a id="a80861025098c83668d856fa4bf8121f0"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputAddrTransform</b> ()</td></tr>
 <tr class="separator:a80861025098c83668d856fa4bf8121f0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:add6c69301b6a6b043b7f3617844b9a56"><td class="memItemLeft" align="right" valign="top"><a id="add6c69301b6a6b043b7f3617844b9a56"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputAddrTransform</b> ()</td></tr>
 <tr class="separator:add6c69301b6a6b043b7f3617844b9a56"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a40dd566fe059bf628929c003cc87c0a3"><td class="memItemLeft" align="right" valign="top"><a id="a40dd566fe059bf628929c003cc87c0a3"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputAddrTransform</b> () const</td></tr>
-<tr class="separator:a40dd566fe059bf628929c003cc87c0a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1954cfa9c926db8ad809e7aebacdb7c"><td class="memItemLeft" align="right" valign="top"><a id="ac1954cfa9c926db8ad809e7aebacdb7c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputAddrTransform</b> () const</td></tr>
-<tr class="separator:ac1954cfa9c926db8ad809e7aebacdb7c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2aded15694d978e2abbb32d52a9fd059"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">registerEligible</a> (<a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a> id) const -&gt; bool</td></tr>
-<tr class="separator:a2aded15694d978e2abbb32d52a9fd059"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a63de09031672cf984070202444ade954"><td class="memItemLeft" align="right" valign="top"><a id="a63de09031672cf984070202444ade954"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEligibleFilter</b> () const</td></tr>
-<tr class="separator:a63de09031672cf984070202444ade954"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0ea16da7e23dc1ee09e5c545de25c29f"><td class="memItemLeft" align="right" valign="top">constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#a0ea16da7e23dc1ee09e5c545de25c29f">registerEligible</a> (ID id) -&gt; bool</td></tr>
+<tr class="separator:a0ea16da7e23dc1ee09e5c545de25c29f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a398c08fac7bf97284f9e7df79fa32e18"><td class="memItemLeft" align="right" valign="top"><a id="a398c08fac7bf97284f9e7df79fa32e18"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEligibleFilter</b> ()</td></tr>
+<tr class="separator:a398c08fac7bf97284f9e7df79fa32e18"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad9410985d78950efe2137167699d8ab4"><td class="memItemLeft" align="right" valign="top">auto&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpoly_1_1poly_1_1Dependencies.html#ad9410985d78950efe2137167699d8ab4">determinePeelDepth</a> (<a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *, int32_t) -&gt; utils::Optional&lt; size_t &gt;</td></tr>
 <tr class="separator:ad9410985d78950efe2137167699d8ab4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9dd47f7c1ea65800fe94b3d637460e1d"><td class="memItemLeft" align="right" valign="top"><a id="a9dd47f7c1ea65800fe94b3d637460e1d"></a>
+DEBUGUSED void&#160;</td><td class="memItemRight" valign="bottom"><b>dump</b> ()</td></tr>
+<tr class="separator:a9dd47f7c1ea65800fe94b3d637460e1d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Function Documentation</h2>
 <a id="ad9410985d78950efe2137167699d8ab4"></a>
@@ -283,8 +210,8 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEli
 
 </div>
 </div>
-<a id="a2aded15694d978e2abbb32d52a9fd059"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2aded15694d978e2abbb32d52a9fd059">&#9670;&nbsp;</a></span>registerEligible()</h2>
+<a id="a0ea16da7e23dc1ee09e5c545de25c29f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0ea16da7e23dc1ee09e5c545de25c29f">&#9670;&nbsp;</a></span>registerEligible()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -295,9 +222,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEli
         <tr>
           <td class="memname">constexpr auto poly::poly::Dependencies::registerEligible </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a>&#160;</td>
+          <td class="paramtype">ID&#160;</td>
           <td class="paramname"><em>id</em></td><td>)</td>
-          <td> const -&gt; bool </td>
+          <td> -&gt; bool </td>
         </tr>
       </table>
   </td>
@@ -323,7 +250,7 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerEli
         <tr>
           <td class="memname">constexpr void poly::poly::Dependencies::removeEdge </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="structpoly_1_1poly_1_1Dependence_1_1ID.html">ID</a>&#160;</td>
+          <td class="paramtype">ID&#160;</td>
           <td class="paramname"><em>id</em></td><td>)</td>
           <td></td>
         </tr>

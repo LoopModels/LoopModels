@@ -66,6 +66,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="structpoly_1_1CostModeling_1_1RegisterUseByUnroll-members.html">List of all members</a>  </div>
@@ -74,6 +75,12 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a0026f85716ebd22daf730fe2428570c7"><td class="memItemLeft" align="right" valign="top"><a id="a0026f85716ebd22daf730fe2428570c7"></a>
+using&#160;</td><td class="memItemRight" valign="bottom"><b>Order</b> = containers::TinyVector&lt; int8_t, 15, int8_t &gt;</td></tr>
+<tr class="separator:a0026f85716ebd22daf730fe2428570c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ae3afc3533b5561c1d48b6f2c6b2c2127"><td class="memItemLeft" align="right" valign="top"><a id="ae3afc3533b5561c1d48b6f2c6b2c2127"></a>
@@ -82,9 +89,24 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>begin</b> (
 <tr class="memitem:ab0eecef0c48dc06e6a28be5dd1f5c025"><td class="memItemLeft" align="right" valign="top"><a id="ab0eecef0c48dc06e6a28be5dd1f5c025"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>end</b> () const -&gt; const std::array&lt; uint32_t, 2 &gt; *</td></tr>
 <tr class="separator:ab0eecef0c48dc06e6a28be5dd1f5c025"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad1dd93407c174cc53ff585a9007a1f38"><td class="memItemLeft" align="right" valign="top"><a id="ad1dd93407c174cc53ff585a9007a1f38"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerConsumption</b> (Order order, uint32_t depMask, const AbstractMatrix auto &amp;invunrolls) const -&gt; utils::eltype_t&lt; decltype(invunrolls)&gt;</td></tr>
+<tr class="separator:ad1dd93407c174cc53ff585a9007a1f38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a191290100411825c94df371e4334517c"><td class="memItemLeft" align="right" valign="top"><a id="a191290100411825c94df371e4334517c"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>registerPressure</b> (const AbstractMatrix auto &amp;invunrolls) const -&gt; utils::eltype_t&lt; decltype(invunrolls)&gt;</td></tr>
+<tr class="separator:a191290100411825c94df371e4334517c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a4e4ade9b788cd3bd86454f7460ab4e"><td class="memItemLeft" align="right" valign="top"><a id="a6a4e4ade9b788cd3bd86454f7460ab4e"></a>
+&#160;</td><td class="memItemRight" valign="bottom"><b>RegisterUseByUnroll</b> (Arena&lt;&gt; *alloc, const llvm::TargetTransformInfo &amp;TTI, <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *L)</td></tr>
+<tr class="separator:a6a4e4ade9b788cd3bd86454f7460ab4e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr class="memitem:a11ae4f47e28e5964d64829984e045bf5"><td class="memItemLeft" align="right" valign="top"><a id="a11ae4f47e28e5964d64829984e045bf5"></a>
+containers::TinyVector&lt; utils::LoopSet, 15, int16_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>cmpts</b></td></tr>
+<tr class="separator:a11ae4f47e28e5964d64829984e045bf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8781eb199987a8dade9ffd64a9543fe1"><td class="memItemLeft" align="right" valign="top"><a id="a8781eb199987a8dade9ffd64a9543fe1"></a>
+<a class="el" href="structpoly_1_1utils_1_1LoopPermutations.html">utils::LoopPermutations</a>&#160;</td><td class="memItemRight" valign="bottom"><b>perms</b></td></tr>
+<tr class="separator:a8781eb199987a8dade9ffd64a9543fe1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb1d2331b949db92ee6e19e2c7756cdd"><td class="memItemLeft" align="right" valign="top"><a id="abb1d2331b949db92ee6e19e2c7756cdd"></a>
 math::Vector&lt; std::array&lt; uint32_t, 2 &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><b>masks</b> {}</td></tr>
 <tr class="separator:abb1d2331b949db92ee6e19e2c7756cdd"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -93,7 +115,7 @@ unsigned&#160;</td><td class="memItemRight" valign="bottom"><b>register_count</b
 <tr class="separator:a02c40b245e7114dff55613d2e0ea6fd1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/Optimize/<a class="el" href="CostFunction_8hpp_source.html">CostFunction.hpp</a></li>
+<li>include/Optimize/<a class="el" href="RegisterUse_8hpp_source.html">RegisterUse.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

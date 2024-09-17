@@ -64,8 +64,11 @@ $(function() {
 &#160;
 
 <h3><a id="index_a"></a>- a -</h3><ul>
+<li>addLoop()
+: <a class="el" href="classpoly_1_1builder_1_1Builder.html#ae71b9cad1011a96c3cae05b3ebde8a46">poly::builder::Builder</a>
+</li>
 <li>Addr()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#ab49520c0888ccdf75f17d8f7de22023e">poly::IR::Addr</a>
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a387ec0007fd2e88db1726d49a2bc867d">poly::IR::Addr</a>
 </li>
 </ul>
 
@@ -81,13 +84,22 @@ $(function() {
 : <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a61a44178c94724c643b1e13e295af03d">poly::IR::Predicate::Intersection</a>
 </li>
 <li>complete()
-: <a class="el" href="classpoly_1_1IR_1_1Cache.html#a91512385af4782b7098ffb935d01bf26">poly::IR::Cache</a>
+: <a class="el" href="classpoly_1_1IR_1_1Cache.html#a705dbe10a427c1e4de3af79caff18c9c">poly::IR::Cache</a>
 </li>
 <li>construct()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#acbd2f22ec7600b9c4ac4f536f281e6f4">poly::IR::Addr</a>
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#aab2294c2e2f2d844a4085fab5943be88">poly::IR::Addr</a>
+</li>
+<li>contains()
+: <a class="el" href="classpoly_1_1IR_1_1Loop.html#abda7ef33034caf1ebeb2519f27ecdd28">poly::IR::Loop</a>
+</li>
+<li>createLoad()
+: <a class="el" href="classpoly_1_1TestLoopFunction.html#a01fdc7779b7e39a090d6b3e6ae0fe4c5">poly::TestLoopFunction</a>
 </li>
 <li>createSelect()
 : <a class="el" href="classpoly_1_1IR_1_1Cache.html#a6faece9ac31b45aae0353250ff03084d">poly::IR::Cache</a>
+</li>
+<li>createStow()
+: <a class="el" href="classpoly_1_1TestLoopFunction.html#a1536e323a88df6d45eb510097553a0e0">poly::TestLoopFunction</a>
 </li>
 <li>cse()
 : <a class="el" href="classpoly_1_1IR_1_1Cache.html#a4f693e5bc775271888cb0343dc12e750">poly::IR::Cache</a>
@@ -97,7 +109,7 @@ $(function() {
 
 <h3><a id="index_d"></a>- d -</h3><ul>
 <li>descend()
-: <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a8fccd8417b7ce435fe3f8f94cbd7bef3">poly::IR::Predicate::Map</a>
+: <a class="el" href="classpoly_1_1IR_1_1Predicate_1_1Map.html#a05d7044e98f0896bf6f0bc2bf6bdf26d">poly::IR::Predicate::Map</a>
 </li>
 <li>determinePeelDepth()
 : <a class="el" href="classpoly_1_1poly_1_1Dependencies.html#ad9410985d78950efe2137167699d8ab4">poly::poly::Dependencies</a>
@@ -110,7 +122,7 @@ $(function() {
 
 <h3><a id="index_e"></a>- e -</h3><ul>
 <li>edges()
-: <a class="el" href="classpoly_1_1IR_1_1Loop.html#ab61bf1e843e191655df3d6ac96164d3a">poly::IR::Loop</a>
+: <a class="el" href="classpoly_1_1IR_1_1Loop.html#a8a0b3c60ee8a132022fd2efd255fb484">poly::IR::Loop</a>
 </li>
 <li>empty()
 : <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a57e1b8d11bcf9cfb6a5d15947493069f">poly::IR::Predicate::Intersection</a>
@@ -129,14 +141,20 @@ $(function() {
 
 
 <h3><a id="index_g"></a>- g -</h3><ul>
+<li>get()
+: <a class="el" href="classpoly_1_1poly_1_1Dependencies.html#ace7d1535c539260b5d29eae39ffee7f7">poly::poly::Dependencies</a>
+</li>
 <li>getA()
-: <a class="el" href="classpoly_1_1poly_1_1Loop.html#a9f23d8e6010cda90b7fdeddea825fdf4">poly::poly::Loop</a>
+: <a class="el" href="classpoly_1_1poly_1_1Loop.html#a7d26bc23ad981dbc5eef149476b4ded3">poly::poly::Loop</a>
 </li>
 <li>getAllocator()
 : <a class="el" href="classpoly_1_1IR_1_1Cache.html#a6fc976093ca556ac42bc46e2c8e372f0">poly::IR::Cache</a>
 </li>
 <li>getCost()
 : <a class="el" href="classpoly_1_1IR_1_1Value.html#a0f89539ccba0c8fc06e2bd3e7539e503">poly::IR::Value</a>
+</li>
+<li>getFusionOmega()
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a7006cafdd6fbbde4c5975cc8169d3e91">poly::IR::Addr</a>
 </li>
 <li>getInIndMat()
 : <a class="el" href="structpoly_1_1poly_1_1Dependence.html#a0abb755d8e7a698e081db7292e11e44b">poly::poly::Dependence</a>
@@ -148,13 +166,10 @@ $(function() {
 : <a class="el" href="classpoly_1_1IR_1_1Loop.html#a2f7536df8daae2f5cd38078a37a6ecb6">poly::IR::Loop</a>
 </li>
 <li>getOperand()
-: <a class="el" href="classpoly_1_1IR_1_1Compute.html#a1dfabf34d291470801110a6237e0d672">poly::IR::Compute</a>
+: <a class="el" href="classpoly_1_1IR_1_1Compute.html#ae8a2f8d2110fbbcec9a4275bfaec4278">poly::IR::Compute</a>
 </li>
 <li>getOperands()
 : <a class="el" href="classpoly_1_1IR_1_1Compute.html#afe2e72d4eb323754f6974e34c511ef60">poly::IR::Compute</a>
-</li>
-<li>getOrthAxes()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#ae90f06af325c0788ee728fccb626faca">poly::IR::Addr</a>
 </li>
 <li>getOuterLoop()
 : <a class="el" href="classpoly_1_1IR_1_1Loop.html#a755f4c7aa801d35a149c735832a6fedd">poly::IR::Loop</a>
@@ -164,6 +179,9 @@ $(function() {
 </li>
 <li>getPhi()
 : <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html#a84004f4089316dcf55f5e9031a37f6c4">poly::lp::ScheduledNode</a>
+</li>
+<li>getSCEVUnknown()
+: <a class="el" href="classpoly_1_1TestLoopFunction.html#a9e43911b7c7163dcef24ebd672681b6b">poly::TestLoopFunction</a>
 </li>
 <li>getSchedule()
 : <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html#a0f570dd701e4e41d75597c7cbb3a5e4c">poly::lp::ScheduledNode</a>
@@ -179,14 +197,14 @@ $(function() {
 : <a class="el" href="classpoly_1_1IR_1_1Addr.html#a66e194eeceb899e0e0343153d7579ff7">poly::IR::Addr</a>
 </li>
 <li>getValue()
-: <a class="el" href="classpoly_1_1IR_1_1Cache.html#a94b8346dba5031648a989204bd24937c">poly::IR::Cache</a>
+: <a class="el" href="classpoly_1_1IR_1_1Cache.html#aec50298388f70703e5b7b7b90ae0359d">poly::IR::Cache</a>
 </li>
 </ul>
 
 
 <h3><a id="index_i"></a>- i -</h3><ul>
 <li>indexMatrix()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#af4838372d11fd32b964c9a7cb6d4b1b8">poly::IR::Addr</a>
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#af5ceceb3d01057d14b1027cc9c8325f6">poly::IR::Addr</a>
 </li>
 <li>initAncestors()
 : <a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a1bb269c73bb1d0771378624b259ee0e0">poly::IR::MergingCost</a>
@@ -195,34 +213,37 @@ $(function() {
 : <a class="el" href="structpoly_1_1comparator_1_1BaseSymbolicComparator.html#a86d6285e8a8d391d3f9492e5d71c2dba">poly::comparator::BaseSymbolicComparator&lt; T &gt;</a>
 </li>
 <li>insertAfter()
-: <a class="el" href="classpoly_1_1IR_1_1Node.html#ae7bdcfeb321464023c337a0ead600382">poly::IR::Node</a>
+: <a class="el" href="classpoly_1_1IR_1_1Node.html#a7f14efce44dd00c01b017ee272b14964">poly::IR::Node</a>
 </li>
 <li>insertAhead()
-: <a class="el" href="classpoly_1_1IR_1_1Node.html#a1b04b2bdc393d7b72ace4c27e758fbde">poly::IR::Node</a>
+: <a class="el" href="classpoly_1_1IR_1_1Node.html#a3c28efb571791d987fdbe9020da245ad">poly::IR::Node</a>
+</li>
+<li>insertNextAddr()
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a9302ea6fed036780a023e9e742def6ba">poly::IR::Addr</a>
 </li>
 <li>Instruction()
-: <a class="el" href="classpoly_1_1IR_1_1Instruction.html#a854f54fcbcec590e7bfa1c65100969e3">poly::IR::Instruction</a>
+: <a class="el" href="classpoly_1_1IR_1_1Instruction.html#a1573d32c9518a740b11984153bc83621">poly::IR::Instruction</a>
 </li>
 <li>intersectionIsEmpty()
 : <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">poly::IR::Predicate::Set</a>
 </li>
 <li>IROptimizer()
-: <a class="el" href="classpoly_1_1CostModeling_1_1IROptimizer.html#a56d5f5d6cf0bdc48ca6aa962e607b448">poly::CostModeling::IROptimizer</a>
+: <a class="el" href="classpoly_1_1CostModeling_1_1IROptimizer.html#a52dbc57b8d548161b4fa0f6b91b2d8e3">poly::CostModeling::IROptimizer</a>
 </li>
 <li>isActive()
-: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#a40cd4a879088dff13f540603c4527859">poly::poly::Dependence</a>
+: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#af2f6bd46196b5edf52d265189b5df22f">poly::poly::Dependence</a>
 </li>
 <li>isCondIndep()
 : <a class="el" href="structpoly_1_1poly_1_1Dependence.html#a3e863ed72e68c568e3b0426c6f7f76e1">poly::poly::Dependence</a>
 </li>
 <li>isForward()
-: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#af0d8b4e19c0fd884c1b46874a5cffd65">poly::poly::Dependence</a>
+: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#aabe089f9d6356fbd2b2bfb32297305a4">poly::poly::Dependence</a>
 </li>
 <li>isMerged()
 : <a class="el" href="structpoly_1_1IR_1_1MergingCost.html#a0f5c22824734316304ca40f3a5e613f6">poly::IR::MergingCost</a>
 </li>
 <li>isSat()
-: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#ac3b4f4afcc442f847ff0bc6faed6dd2d">poly::poly::Dependence</a>
+: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#a300f5d5e0b58d56656806847d88e93a8">poly::poly::Dependence</a>
 </li>
 <li>isStore()
 : <a class="el" href="classpoly_1_1IR_1_1Value.html#a6b2b299b85ea7f73459b85597df1b2d3">poly::IR::Value</a>
@@ -237,12 +258,19 @@ $(function() {
 </ul>
 
 
+<h3><a id="index_l"></a>- l -</h3><ul>
+<li>loopMask()
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a591a59864409ac448761fd1cac17476c">poly::IR::Addr</a>
+</li>
+</ul>
+
+
 <h3><a id="index_m"></a>- m -</h3><ul>
 <li>maybeReassociableReduction()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#accdad85de4ae77ef8e4477c2821a37a6">poly::IR::Addr</a>
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a3d81fe8e443359935ea13943fadc8196">poly::IR::Addr</a>
 </li>
 <li>mergeMap()
-: <a class="el" href="classpoly_1_1poly_1_1DepPoly.html#afc4fa536b4d8eddca8b17a10e04b466c">poly::poly::DepPoly</a>
+: <a class="el" href="classpoly_1_1poly_1_1DepPoly.html#af2e8fbc80926c4670cf3d038c1a7c470">poly::poly::DepPoly</a>
 </li>
 <li>mergeOperands()
 : <a class="el" href="structpoly_1_1IR_1_1MergingCost.html#af52ae253e1281d3e0dfc121afc381561">poly::IR::MergingCost</a>
@@ -257,9 +285,16 @@ $(function() {
 </ul>
 
 
+<h3><a id="index_p"></a>- p -</h3><ul>
+<li>peelLoops()
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a7c5b09c6af499bdf242a071776ed6252">poly::IR::Addr</a>
+</li>
+</ul>
+
+
 <h3><a id="index_r"></a>- r -</h3><ul>
 <li>registerEligible()
-: <a class="el" href="classpoly_1_1poly_1_1Dependencies.html#a2aded15694d978e2abbb32d52a9fd059">poly::poly::Dependencies</a>
+: <a class="el" href="classpoly_1_1poly_1_1Dependencies.html#a0ea16da7e23dc1ee09e5c545de25c29f">poly::poly::Dependencies</a>
 </li>
 <li>removeEdge()
 : <a class="el" href="classpoly_1_1poly_1_1Dependencies.html#aad261426ea6c9a40cc734eccd7d197a7">poly::poly::Dependencies</a>
@@ -267,11 +302,14 @@ $(function() {
 <li>removeEmptyMask()
 : <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a03f0fec36c260a442aa37efaae474cdd">poly::IR::Predicate::Intersection</a>
 </li>
+<li>removeInnerMost()
+: <a class="el" href="classpoly_1_1poly_1_1Loop.html#ad4b6cecb2793f75829e5546abe567bf6">poly::poly::Loop</a>
+</li>
 <li>replaceAllUsesWith()
 : <a class="el" href="classpoly_1_1IR_1_1Cache.html#a40325b31d215da23367410a8eb41519f">poly::IR::Cache</a>
 </li>
 <li>rotate()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a136186b97137aa0fcfd884a7033ceb0d">poly::IR::Addr</a>
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a2f9fb1860b1a9f51a19fb23b2fa4d5ab">poly::IR::Addr</a>
 , <a class="el" href="classpoly_1_1poly_1_1Loop.html#a03240e7893974248eddd72423304b2b5">poly::poly::Loop</a>
 </li>
 </ul>
@@ -281,21 +319,24 @@ $(function() {
 <li>selectCost()
 : <a class="el" href="classpoly_1_1IR_1_1Operation.html#aa149e4b9cf989c4e38971610a00729de">poly::IR::Operation</a>
 </li>
+<li>setChild()
+: <a class="el" href="classpoly_1_1IR_1_1Node.html#a09664978ca38483f9dd28655c120669f">poly::IR::Node</a>
+</li>
 <li>setFusionOmega()
 : <a class="el" href="classpoly_1_1IR_1_1Addr.html#a26d3b32498e5ea5373a423a9bb463477">poly::IR::Addr</a>
 </li>
 <li>setSatLevelLP()
-: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#ad61450183ac23f948dd96d0b8090bc00">poly::poly::Dependence</a>
+: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#a06a1b10ad34d1ce9fb855ada52b88376">poly::poly::Dependence</a>
 </li>
 <li>stashedPreventsReordering()
-: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#a7e7c6210c36668e3d1b290e4eed76955">poly::poly::Dependence</a>
+: <a class="el" href="structpoly_1_1poly_1_1Dependence.html#afc967622e1bc0a6aa6ffb27ba6a612b4">poly::poly::Dependence</a>
 </li>
 </ul>
 
 
 <h3><a id="index_t"></a>- t -</h3><ul>
 <li>tripCount()
-: <a class="el" href="classpoly_1_1poly_1_1Loop.html#a36654e1921b64095af6be501fc1e22db">poly::poly::Loop</a>
+: <a class="el" href="classpoly_1_1poly_1_1Loop.html#a9041c23b75f3a0e52b14aeb3aef1a402">poly::poly::Loop</a>
 </li>
 </ul>
 
@@ -305,14 +346,17 @@ $(function() {
 : <a class="el" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a9dbe51049dcc1443411c76c62075c249">poly::IR::Predicate::Set</a>
 </li>
 <li>updateOffsMat()
-: <a class="el" href="classpoly_1_1IR_1_1Addr.html#a218eb171572ded2bb68130151bc8f0bd">poly::IR::Addr</a>
+: <a class="el" href="classpoly_1_1IR_1_1Addr.html#adf5f352aacaafd701b0505bf9dfec865">poly::IR::Addr</a>
 </li>
 </ul>
 
 
-<h3><a id="index_w"></a>- w -</h3><ul>
-<li>wasVisited()
-: <a class="el" href="classpoly_1_1IR_1_1Node.html#aac0107aaff71836a2e73ce03e8119fa1">poly::IR::Node</a>
+<h3><a id="index_v"></a>- v -</h3><ul>
+<li>visited0()
+: <a class="el" href="classpoly_1_1IR_1_1Node.html#ab88fb01bf0d225c479504fca26a9aa72">poly::IR::Node</a>
+</li>
+<li>visited1()
+: <a class="el" href="classpoly_1_1IR_1_1Node.html#a352818324cac83c87c3e03daf035d9d3">poly::IR::Node</a>
 </li>
 </ul>
 </div><!-- contents -->

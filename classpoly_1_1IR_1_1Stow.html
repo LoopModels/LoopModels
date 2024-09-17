@@ -99,9 +99,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredVa
 <tr class="memitem:a3b60578e5872fbd127a88f559d4c858e"><td class="memItemLeft" align="right" valign="top"><a id="a3b60578e5872fbd127a88f559d4c858e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getStoredValPtr</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> **</td></tr>
 <tr class="separator:a3b60578e5872fbd127a88f559d4c858e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:accf39141acf4f0087486e55d3828ba9a"><td class="memItemLeft" align="right" valign="top"><a id="accf39141acf4f0087486e55d3828ba9a"></a>
-constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setVal</b> (<a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *n)</td></tr>
-<tr class="separator:accf39141acf4f0087486e55d3828ba9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26497886e9eff872a5b9a0d6d154b876"><td class="memItemLeft" align="right" valign="top"><a id="a26497886e9eff872a5b9a0d6d154b876"></a>
+constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setVal</b> (Arena&lt;&gt; *alloc, <a class="el" href="classpoly_1_1IR_1_1Value.html">Value</a> *n)</td></tr>
+<tr class="separator:a26497886e9eff872a5b9a0d6d154b876"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classpoly_1_1IR_1_1AddrWrapper')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classpoly_1_1IR_1_1AddrWrapper.html">poly::IR::AddrWrapper</a></td></tr>
 <tr class="memitem:acdfff6a5b45e7b8c8ceaf8a786cb3450 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="acdfff6a5b45e7b8c8ceaf8a786cb3450"></a>
 constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>operator bool</b> ()</td></tr>
@@ -112,6 +112,12 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChild</b
 <tr class="memitem:a48be16b34eedab194535f9139e479d3d inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="a48be16b34eedab194535f9139e479d3d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getParent</b> () const -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
 <tr class="separator:a48be16b34eedab194535f9139e479d3d inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4775c914cc4b4ba1050b0788de5efe6 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="ac4775c914cc4b4ba1050b0788de5efe6"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNext</b> () const -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
+<tr class="separator:ac4775c914cc4b4ba1050b0788de5efe6 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac94a4afe58969427e947d88501c85050 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="ac94a4afe58969427e947d88501c85050"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPrev</b> () const -&gt; <a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *</td></tr>
+<tr class="separator:ac94a4afe58969427e947d88501c85050 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a30f89e259f1c311c25679356652ff391 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="a30f89e259f1c311c25679356652ff391"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>setChild</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
 <tr class="separator:a30f89e259f1c311c25679356652ff391 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -130,12 +136,12 @@ constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertAfter
 <tr class="memitem:a9bc0507117dec5565595be1633ce2445 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="a9bc0507117dec5565595be1633ce2445"></a>
 constexpr void&#160;</td><td class="memItemRight" valign="bottom"><b>insertAhead</b> (<a class="el" href="classpoly_1_1IR_1_1Node.html">Node</a> *n)</td></tr>
 <tr class="separator:a9bc0507117dec5565595be1633ce2445 inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ec76ec32766de7cabba06867fcd8c8b inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="a8ec76ec32766de7cabba06867fcd8c8b"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentDepth</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a8ec76ec32766de7cabba06867fcd8c8b inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2145a08c97ee3301d71e81dd79a3995c inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="a2145a08c97ee3301d71e81dd79a3995c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNaturalDepth</b> () const -&gt; unsigned</td></tr>
-<tr class="separator:a2145a08c97ee3301d71e81dd79a3995c inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0d936a68b116007bf046b087aef38da inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="ac0d936a68b116007bf046b087aef38da"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getCurrentDepth</b> () const -&gt; int</td></tr>
+<tr class="separator:ac0d936a68b116007bf046b087aef38da inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac158b3ddc38b1898f2d9a3527eb4621e inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="ac158b3ddc38b1898f2d9a3527eb4621e"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNaturalDepth</b> () const -&gt; int</td></tr>
+<tr class="separator:ac158b3ddc38b1898f2d9a3527eb4621e inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7b49c458048246a2bb3221dfef6ff33c inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memItemLeft" align="right" valign="top"><a id="a7b49c458048246a2bb3221dfef6ff33c"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator==</b> (const <a class="el" href="classpoly_1_1IR_1_1AddrWrapper.html">AddrWrapper</a> &amp;other) const -&gt; bool</td></tr>
 <tr class="separator:a7b49c458048246a2bb3221dfef6ff33c inherit pub_methods_classpoly_1_1IR_1_1AddrWrapper"><td class="memSeparator" colspan="2">&#160;</td></tr>

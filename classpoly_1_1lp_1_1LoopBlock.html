@@ -98,9 +98,9 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getAllocato
 <tr class="memitem:a75eca6e6772f725cc79a5fa6bf146b67"><td class="memItemLeft" align="right" valign="top"><a id="a75eca6e6772f725cc79a5fa6bf146b67"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDependencies</b> () -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;</td></tr>
 <tr class="separator:a75eca6e6772f725cc79a5fa6bf146b67"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeef134519b53948c9c3119cda5bc5ae7"><td class="memItemLeft" align="right" valign="top"><a id="aeef134519b53948c9c3119cda5bc5ae7"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDependencies</b> () const -&gt; const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;</td></tr>
-<tr class="separator:aeef134519b53948c9c3119cda5bc5ae7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2524e020dbc75557a00e52a1e4b08ca3"><td class="memItemLeft" align="right" valign="top"><a id="a2524e020dbc75557a00e52a1e4b08ca3"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getDependencies</b> () const -&gt; <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;</td></tr>
+<tr class="separator:a2524e020dbc75557a00e52a1e4b08ca3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A loop block is a block of the program that may include multiple loops. These loops are either all executed (note iteration count may be 0, or loops may be in rotated form and the guard prevents execution; this is okay and counts as executed for our purposes here ), or none of them are. That is, the <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> does not contain divergent control flow, or guards unrelated to loop bounds. The loops within a <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> are optimized together, so we can consider optimizations such as reordering or fusing them together as a set.</p>

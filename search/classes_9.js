@@ -1,8 +1,19 @@
 var searchData=
 [
-  ['map_265',['Map',['../classpoly_1_1IR_1_1Predicate_1_1Map.html',1,'poly::IR::Predicate']]],
-  ['memcostsummary_266',['MemCostSummary',['../structpoly_1_1CostModeling_1_1MemCostSummary.html',1,'poly::CostModeling']]],
-  ['mergingcost_267',['MergingCost',['../structpoly_1_1IR_1_1MergingCost.html',1,'poly::IR']]],
-  ['mockgraph_268',['MockGraph',['../structpoly_1_1MockGraph.html',1,'poly']]],
-  ['mockvertex_269',['MockVertex',['../structpoly_1_1MockVertex.html',1,'poly']]]
+  ['legality_279',['Legality',['../classpoly_1_1CostModeling_1_1Legality.html',1,'poly::CostModeling']]],
+  ['linearsymboliccomparator_280',['LinearSymbolicComparator',['../structpoly_1_1comparator_1_1LinearSymbolicComparator.html',1,'poly::comparator']]],
+  ['literalcomparator_281',['LiteralComparator',['../structpoly_1_1comparator_1_1LiteralComparator.html',1,'poly::comparator']]],
+  ['llvmirbuilder_282',['LLVMIRBuilder',['../structpoly_1_1IR_1_1LLVMIRBuilder.html',1,'poly::IR']]],
+  ['load_283',['Load',['../classpoly_1_1IR_1_1Load.html',1,'poly::IR']]],
+  ['loop_284',['Loop',['../classpoly_1_1IR_1_1Loop.html',1,'poly::IR::Loop'],['../classpoly_1_1poly_1_1Loop.html',1,'poly::poly::Loop']]],
+  ['loopblock_285',['LoopBlock',['../classpoly_1_1lp_1_1LoopBlock.html',1,'poly::lp']]],
+  ['loopcostcounts_286',['LoopCostCounts',['../structpoly_1_1CostModeling_1_1LoopCostCounts.html',1,'poly::CostModeling']]],
+  ['loopdepsatisfaction_287',['LoopDepSatisfaction',['../structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html',1,'poly::CostModeling']]],
+  ['loopdepsummary_288',['LoopDepSummary',['../structpoly_1_1CostModeling_1_1LoopDepSummary.html',1,'poly::CostModeling']]],
+  ['loopindependent_289',['LoopIndependent',['../structpoly_1_1CostModeling_1_1LoopIndependent.html',1,'poly::CostModeling']]],
+  ['loopinvariant_290',['LoopInvariant',['../classpoly_1_1IR_1_1LoopInvariant.html',1,'poly::IR']]],
+  ['looppermutation_291',['LoopPermutation',['../structpoly_1_1utils_1_1LoopPermutation.html',1,'poly::utils']]],
+  ['looppermutations_292',['LoopPermutations',['../structpoly_1_1utils_1_1LoopPermutations.html',1,'poly::utils']]],
+  ['looptree_293',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]],
+  ['looptreecostfn_294',['LoopTreeCostFn',['../classpoly_1_1CostModeling_1_1LoopTreeCostFn.html',1,'poly::CostModeling']]]
 ];

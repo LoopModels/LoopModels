@@ -125,8 +125,8 @@ $(function() {
 <div class="line"><a name="l00059"></a><span class="lineno">   59</span>&#160;    uint64_t maskedOff = predicates &amp; ~(3ULL &lt;&lt; (index));</div>
 <div class="line"><a name="l00060"></a><span class="lineno">   60</span>&#160;    predicates = maskedOff | <span class="keyword">static_cast&lt;</span>uint64_t<span class="keyword">&gt;</span>(value) &lt;&lt; (index);</div>
 <div class="line"><a name="l00061"></a><span class="lineno">   61</span>&#160;  }</div>
-<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> intersect(<span class="keywordtype">size_t</span> index, Relation value) <span class="keyword">const</span></div>
-<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> {</div>
+<div class="line"><a name="l00062"></a><span class="lineno">   62</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> intersect(<span class="keywordtype">size_t</span> index,</div>
+<div class="line"><a name="l00063"></a><span class="lineno">   63</span>&#160;                               Relation value) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> {</div>
 <div class="line"><a name="l00064"></a><span class="lineno">   64</span>&#160;    invariant(index &lt; 32);</div>
 <div class="line"><a name="l00065"></a><span class="lineno">   65</span>&#160;    index += index;</div>
 <div class="line"><a name="l00066"></a><span class="lineno">   66</span>&#160;    <span class="keywordflow">return</span> {predicates | <span class="keyword">static_cast&lt;</span>uint64_t<span class="keyword">&gt;</span>(value) &lt;&lt; (index)};</div>
@@ -144,8 +144,8 @@ $(function() {
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> operator[](<span class="keywordtype">size_t</span> index) -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html">Reference</a> {</div>
 <div class="line"><a name="l00079"></a><span class="lineno">   79</span>&#160;    <span class="keywordflow">return</span> {predicates, 2 * index};</div>
 <div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  }</div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> operator&amp;(Intersection other) <span class="keyword">const</span></div>
-<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    -&gt; Intersection {</div>
+<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;  operator&amp;(Intersection other) <span class="keyword">const</span> -&gt; Intersection {</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;    <span class="keywordflow">return</span> {predicates | other.predicates};</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  }</div>
 <div class="line"><a name="l00085"></a><span class="lineno">   85</span>&#160;  <span class="keyword">auto</span> operator&amp;=(Intersection other) -&gt; Intersection &amp; {</div>
@@ -178,8 +178,8 @@ $(function() {
 <div class="line"><a name="l00116"></a><span class="lineno"><a class="line" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a57e1b8d11bcf9cfb6a5d15947493069f">  116</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#a57e1b8d11bcf9cfb6a5d15947493069f">empty</a>() const -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00117"></a><span class="lineno">  117</span>&#160;    <span class="keywordflow">return</span> isEmpty(predicates);</div>
 <div class="line"><a name="l00118"></a><span class="lineno">  118</span>&#160;  }</div>
-<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getConflict(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) <span class="keyword">const</span></div>
-<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;    -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> {</div>
+<div class="line"><a name="l00119"></a><span class="lineno">  119</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l00120"></a><span class="lineno">  120</span>&#160;  getConflict(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> other) <span class="keyword">const</span> -&gt; <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a> {</div>
 <div class="line"><a name="l00121"></a><span class="lineno">  121</span>&#160;    uint64_t m = <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html#ac8d2d38ea137149fc6f187756ff58431">keepEmptyMask</a>(predicates &amp; other.predicates);</div>
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;    <span class="keywordflow">return</span> <a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Intersection.html">Intersection</a>{predicates &amp; m};</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;  }</div>
@@ -400,7 +400,7 @@ $(function() {
 <div class="line"><a name="l00394"></a><span class="lineno">  394</span>&#160;  <span class="comment">//   return other-&gt;copy(alloc) &amp;= *this;</span></div>
 <div class="line"><a name="l00395"></a><span class="lineno">  395</span>&#160;  <span class="comment">// }</span></div>
 <div class="line"><a name="l00396"></a><span class="lineno">  396</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getConflict(Intersection other) <span class="keyword">const</span> -&gt; Intersection {</div>
-<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    assert(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(other));</div>
+<div class="line"><a name="l00397"></a><span class="lineno">  397</span>&#160;    ASSERT(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(other));</div>
 <div class="line"><a name="l00398"></a><span class="lineno">  398</span>&#160;    <span class="keywordflow">if</span> (!allocated) <span class="keywordflow">return</span> intersectUnion.intersect.getConflict(other);</div>
 <div class="line"><a name="l00399"></a><span class="lineno">  399</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersects-&gt;reduce(</div>
 <div class="line"><a name="l00400"></a><span class="lineno">  400</span>&#160;      Intersection{}, [&amp;](Intersection a, Intersection b) {</div>
@@ -408,7 +408,7 @@ $(function() {
 <div class="line"><a name="l00402"></a><span class="lineno">  402</span>&#160;      });</div>
 <div class="line"><a name="l00403"></a><span class="lineno">  403</span>&#160;  }</div>
 <div class="line"><a name="l00404"></a><span class="lineno">  404</span>&#160;  [[nodiscard]] <span class="keyword">auto</span> getConflict(<span class="keyword">const</span> Set &amp;other) <span class="keyword">const</span> -&gt; Intersection {</div>
-<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    assert(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(other));</div>
+<div class="line"><a name="l00405"></a><span class="lineno">  405</span>&#160;    ASSERT(<a class="code" href="structpoly_1_1IR_1_1Predicate_1_1Set.html#a1895952ec0bcc73daba680faef2d1610">intersectionIsEmpty</a>(other));</div>
 <div class="line"><a name="l00406"></a><span class="lineno">  406</span>&#160;    <span class="keywordflow">if</span> (!allocated) <span class="keywordflow">return</span> other.getConflict(intersectUnion.intersect);</div>
 <div class="line"><a name="l00407"></a><span class="lineno">  407</span>&#160;    <span class="keywordflow">if</span> (!other.allocated) <span class="keywordflow">return</span> getConflict(other.intersectUnion.intersect);</div>
 <div class="line"><a name="l00408"></a><span class="lineno">  408</span>&#160;    <span class="keywordflow">return</span> intersectUnion.intersects-&gt;reduce(</div>

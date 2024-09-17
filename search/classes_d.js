@@ -1,9 +1,7 @@
 var searchData=
 [
-  ['recipthroughputlatency_282',['RecipThroughputLatency',['../structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html',1,'poly::IR::cost']]],
-  ['ref_283',['Ref',['../classpoly_1_1poly_1_1Dependencies_1_1Ref.html',1,'poly::poly::Dependencies']]],
-  ['reference_284',['Reference',['../structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html',1,'poly::IR::Predicate::Intersection']]],
-  ['registerusebyunroll_285',['RegisterUseByUnroll',['../structpoly_1_1CostModeling_1_1RegisterUseByUnroll.html',1,'poly::CostModeling']]],
-  ['remapper_286',['ReMapper',['../classpoly_1_1IR_1_1ReMapper.html',1,'poly::IR']]],
-  ['result_287',['Result',['../structpoly_1_1lp_1_1Result.html',1,'poly::lp']]]
+  ['permutationiterator_310',['PermutationIterator',['../structpoly_1_1utils_1_1PermutationIterator.html',1,'poly::utils']]],
+  ['permutations_311',['Permutations',['../structpoly_1_1utils_1_1Permutations.html',1,'poly::utils']]],
+  ['proxyreference_312',['ProxyReference',['../structpoly_1_1IR_1_1cost_1_1VectorizationCosts_1_1ProxyReference.html',1,'poly::IR::cost::VectorizationCosts']]],
+  ['ptrsymboliccomparator_313',['PtrSymbolicComparator',['../structpoly_1_1comparator_1_1PtrSymbolicComparator.html',1,'poly::comparator']]]
 ];

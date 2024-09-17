@@ -78,21 +78,18 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a396001005509f2b0593c52b418fdd25e"><td class="memItemLeft" align="right" valign="top"><a id="a396001005509f2b0593c52b418fdd25e"></a>
-void&#160;</td><td class="memItemRight" valign="bottom"><b>addNode</b> (Arena&lt;&gt; *salloc, Arena&lt;&gt; *lalloc, <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *node)</td></tr>
-<tr class="separator:a396001005509f2b0593c52b418fdd25e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aca8fddfd28cef96250d1a279baa3d072"><td class="memItemLeft" align="right" valign="top"><a id="aca8fddfd28cef96250d1a279baa3d072"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getChildren</b> () -&gt; Vec&lt; <a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> * &gt;</td></tr>
-<tr class="separator:aca8fddfd28cef96250d1a279baa3d072"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3a7774780084cf8ab0d519ad06602b43"><td class="memItemLeft" align="right" valign="top"><a id="a3a7774780084cf8ab0d519ad06602b43"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getLoop</b> () -&gt; <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *</td></tr>
-<tr class="separator:a3a7774780084cf8ab0d519ad06602b43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abe921510261faf4ddda15407995fd5e8"><td class="memItemLeft" align="right" valign="top"><a id="abe921510261faf4ddda15407995fd5e8"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (Arena&lt;&gt; *lalloc)</td></tr>
+<tr class="separator:abe921510261faf4ddda15407995fd5e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af046a38346f044ff8a118e5c604770e7"><td class="memItemLeft" align="right" valign="top"><a id="af046a38346f044ff8a118e5c604770e7"></a>
+constexpr&#160;</td><td class="memItemRight" valign="bottom"><b>LoopTree</b> (Arena&lt;&gt; *lalloc, <a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> *parent_)</td></tr>
+<tr class="separator:af046a38346f044ff8a118e5c604770e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a90ea943a92653dd78f2135c34d56ea09"><td class="memItemLeft" align="right" valign="top"><a id="a90ea943a92653dd78f2135c34d56ea09"></a>
-static auto&#160;</td><td class="memItemRight" valign="bottom"><b>root</b> (Arena&lt;&gt; *salloc, Arena&lt;&gt; *lalloc) -&gt; <a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> *</td></tr>
-<tr class="separator:a90ea943a92653dd78f2135c34d56ea09"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acc1ebf9c0c95cbf3681c69b766174ed0"><td class="memItemLeft" align="right" valign="top"><a id="acc1ebf9c0c95cbf3681c69b766174ed0"></a>
+static auto&#160;</td><td class="memItemRight" valign="bottom"><b>buildGraph</b> (Arena&lt;&gt; salloc, Arena&lt;&gt; *lalloc, <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;deps, <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">lp::ScheduledNode</a> *nodes) -&gt; containers::Pair&lt; <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> *, MutPtrVector&lt; int32_t &gt;&gt;</td></tr>
+<tr class="separator:acc1ebf9c0c95cbf3681c69b766174ed0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="classpoly_1_1CostModeling_1_1LoopTree.html">LoopTree</a> A tree of loops, with an indexable vector of <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a>*s, to facilitate construction of the <a class="el" href="classpoly_1_1IR_1_1Loop.html">IR::Loop</a> graph, from the fusion omegas </p>

@@ -1,13 +1,9 @@
 var searchData=
 [
-  ['scc_288',['SCC',['../structpoly_1_1graphs_1_1SCC.html',1,'poly::graphs']]],
-  ['schedulednode_289',['ScheduledNode',['../classpoly_1_1lp_1_1ScheduledNode.html',1,'poly::lp']]],
-  ['schedulegraph_290',['ScheduleGraph',['../classpoly_1_1lp_1_1ScheduleGraph.html',1,'poly::lp']]],
-  ['selectallocator_291',['SelectAllocator',['../structpoly_1_1IR_1_1MergingCost_1_1SelectAllocator.html',1,'poly::IR::MergingCost']]],
-  ['selectcounter_292',['SelectCounter',['../structpoly_1_1IR_1_1MergingCost_1_1SelectCounter.html',1,'poly::IR::MergingCost']]],
-  ['set_293',['Set',['../structpoly_1_1IR_1_1Predicate_1_1Set.html',1,'poly::IR::Predicate']]],
-  ['squarematrixprinter_294',['SquareMatrixPrinter',['../classprettyprinters_1_1SquareMatrixPrinter.html',1,'prettyprinters']]],
-  ['state_295',['State',['../structpoly_1_1graph_1_1State.html',1,'poly::graph']]],
-  ['stow_296',['Stow',['../classpoly_1_1IR_1_1Stow.html',1,'poly::IR']]],
-  ['stridedmatrixprinter_297',['StridedMatrixPrinter',['../classprettyprinters_1_1StridedMatrixPrinter.html',1,'prettyprinters']]]
+  ['recipthroughputlatency_314',['RecipThroughputLatency',['../structpoly_1_1IR_1_1cost_1_1RecipThroughputLatency.html',1,'poly::IR::cost']]],
+  ['reference_315',['Reference',['../structpoly_1_1IR_1_1Predicate_1_1Intersection_1_1Reference.html',1,'poly::IR::Predicate::Intersection::Reference'],['../structpoly_1_1utils_1_1LoopPermutation_1_1Reference.html',1,'poly::utils::LoopPermutation::Reference']]],
+  ['registeruse_316',['RegisterUse',['../structpoly_1_1CostModeling_1_1RegisterUse.html',1,'poly::CostModeling']]],
+  ['registerusebyunroll_317',['RegisterUseByUnroll',['../structpoly_1_1CostModeling_1_1RegisterUseByUnroll.html',1,'poly::CostModeling']]],
+  ['remapper_318',['ReMapper',['../classpoly_1_1IR_1_1ReMapper.html',1,'poly::IR']]],
+  ['result_319',['Result',['../structpoly_1_1lp_1_1Result.html',1,'poly::lp']]]
 ];

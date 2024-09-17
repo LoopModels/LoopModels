@@ -136,8 +136,8 @@ $(function() {
 <div class="line"><a name="l00076"></a><span class="lineno">   76</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> getPhi() <span class="keyword">const</span> -&gt; SquarePtrMatrix&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00077"></a><span class="lineno">   77</span>&#160;    <span class="keywordflow">return</span> {data(), math::SquareDims&lt;&gt;{getNumLoops()}}; <span class="comment">//</span></div>
 <div class="line"><a name="l00078"></a><span class="lineno">   78</span>&#160;  }</div>
-<div class="line"><a name="l00080"></a><span class="lineno"><a class="line" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">   80</a></span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">getSchedule</a>(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span></div>
-<div class="line"><a name="l00081"></a><span class="lineno">   81</span>&#160;    -&gt; math::PtrVector&lt;int64_t&gt; {</div>
+<div class="line"><a name="l00080"></a><span class="lineno">   80</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span></div>
+<div class="line"><a name="l00081"></a><span class="lineno"><a class="line" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">   81</a></span>&#160;  <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">getSchedule</a>(<span class="keywordtype">size_t</span> d) <span class="keyword">const</span> -&gt; math::PtrVector&lt;int64_t&gt; {</div>
 <div class="line"><a name="l00082"></a><span class="lineno">   82</span>&#160;    <span class="keywordflow">return</span> getPhi()[d, _];</div>
 <div class="line"><a name="l00083"></a><span class="lineno">   83</span>&#160;  }</div>
 <div class="line"><a name="l00084"></a><span class="lineno">   84</span>&#160;  [[nodiscard]] constexpr <span class="keyword">auto</span> <a class="code" href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">getSchedule</a>(<span class="keywordtype">size_t</span> d) -&gt; MutPtrVector&lt;int64_t&gt; {</div>
@@ -181,7 +181,7 @@ $(function() {
 <div class="line"><a name="l00122"></a><span class="lineno">  122</span>&#160;};</div>
 <div class="line"><a name="l00123"></a><span class="lineno">  123</span>&#160;} <span class="comment">// namespace poly::poly</span></div>
 <div class="ttc" id="astructpoly_1_1poly_1_1AffineSchedule_html"><div class="ttname"><a href="structpoly_1_1poly_1_1AffineSchedule.html">poly::poly::AffineSchedule</a></div><div class="ttdef"><b>Definition:</b> Schedule.hpp:35</div></div>
-<div class="ttc" id="astructpoly_1_1poly_1_1AffineSchedule_html_a59920bb4ddd40e454a495277d538d79c"><div class="ttname"><a href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">poly::poly::AffineSchedule::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; math::PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> Schedule.hpp:80</div></div>
+<div class="ttc" id="astructpoly_1_1poly_1_1AffineSchedule_html_a59920bb4ddd40e454a495277d538d79c"><div class="ttname"><a href="structpoly_1_1poly_1_1AffineSchedule.html#a59920bb4ddd40e454a495277d538d79c">poly::poly::AffineSchedule::getSchedule</a></div><div class="ttdeci">constexpr auto getSchedule(size_t d) const -&gt; math::PtrVector&lt; int64_t &gt;</div><div class="ttdoc">getSchedule, loops are always indexed from outer to inner</div><div class="ttdef"><b>Definition:</b> Schedule.hpp:81</div></div>
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

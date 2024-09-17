@@ -74,8 +74,8 @@ $(function() {
 <div class="line"><a name="l00003"></a><span class="lineno">    3</span>&#160; </div>
 <div class="line"><a name="l00004"></a><span class="lineno">    4</span>&#160;<span class="comment">// NOLINTNEXTLINE(misc-no-recursion)</span></div>
 <div class="line"><a name="l00005"></a><span class="lineno">    5</span>&#160;<span class="keyword">inline</span> <span class="keyword">auto</span> bipartiteMatch(Matrix&lt;bool&gt; &amp;bpGraph, <span class="keywordtype">int</span> u,</div>
-<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;                           MutPtrVector&lt;bool&gt; seen, MutPtrVector&lt;int&gt; matchR)</div>
-<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;  -&gt; <span class="keywordtype">bool</span> {</div>
+<div class="line"><a name="l00006"></a><span class="lineno">    6</span>&#160;                           MutPtrVector&lt;bool&gt; seen,</div>
+<div class="line"><a name="l00007"></a><span class="lineno">    7</span>&#160;                           MutPtrVector&lt;int&gt; matchR) -&gt; <span class="keywordtype">bool</span> {</div>
 <div class="line"><a name="l00008"></a><span class="lineno">    8</span>&#160;  <span class="comment">// Try every job one by one</span></div>
 <div class="line"><a name="l00009"></a><span class="lineno">    9</span>&#160;  <span class="keywordflow">for</span> (<span class="keywordtype">int</span> v = 0; v &lt; bpGraph.numRow(); v++) {</div>
 <div class="line"><a name="l00010"></a><span class="lineno">   10</span>&#160;    <span class="comment">// If applicant u is interested in</span></div>

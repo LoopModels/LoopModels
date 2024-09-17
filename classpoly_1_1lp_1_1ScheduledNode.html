@@ -92,6 +92,8 @@ Classes</h2></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1InNode.html">InNode</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1IsIdActive.html">IsIdActive</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1NextAddr.html">NextAddr</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1lp_1_1ScheduledNode_1_1OutNode.html">OutNode</a></td></tr>
@@ -185,45 +187,51 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>localAddr</
 <tr class="memitem:a2d042663b0f7dc2318059de271bfa54b"><td class="memItemLeft" align="right" valign="top"><a id="a2d042663b0f7dc2318059de271bfa54b"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>eachAddr</b> ()</td></tr>
 <tr class="separator:a2d042663b0f7dc2318059de271bfa54b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefad2e58a8b124a9bc78e1bfd654645b"><td class="memItemLeft" align="right" valign="top"><a id="aefad2e58a8b124a9bc78e1bfd654645b"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep)</td></tr>
-<tr class="separator:aefad2e58a8b124a9bc78e1bfd654645b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88747f80c4104944224587c7694a36af"><td class="memItemLeft" align="right" valign="top"><a id="a88747f80c4104944224587c7694a36af"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep)</td></tr>
-<tr class="separator:a88747f80c4104944224587c7694a36af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adb8527f05e4f9084b24334e29b20a8f9"><td class="memItemLeft" align="right" valign="top"><a id="adb8527f05e4f9084b24334e29b20a8f9"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIds</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep) const</td></tr>
-<tr class="separator:adb8527f05e4f9084b24334e29b20a8f9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa0d530386aa8044a3354b015cd8b8c24"><td class="memItemLeft" align="right" valign="top"><a id="aa0d530386aa8044a3354b015cd8b8c24"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIds</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep) const</td></tr>
-<tr class="separator:aa0d530386aa8044a3354b015cd8b8c24"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11b5576ad244b60ef8de1059d1b2db8f"><td class="memItemLeft" align="right" valign="top"><a id="a11b5576ad244b60ef8de1059d1b2db8f"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIds</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep, int depth) const</td></tr>
-<tr class="separator:a11b5576ad244b60ef8de1059d1b2db8f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:afc802940ae9d2be339f06c5f9470665a"><td class="memItemLeft" align="right" valign="top"><a id="afc802940ae9d2be339f06c5f9470665a"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIds</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> dep, int depth) const</td></tr>
-<tr class="separator:afc802940ae9d2be339f06c5f9470665a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a64038e4b44b4ca4cace496c690af68dc"><td class="memItemLeft" align="right" valign="top"><a id="a64038e4b44b4ca4cace496c690af68dc"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep)</td></tr>
-<tr class="separator:a64038e4b44b4ca4cace496c690af68dc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a151b1e045efb32a0a5c0a9fdc8c6fda6"><td class="memItemLeft" align="right" valign="top"><a id="a151b1e045efb32a0a5c0a9fdc8c6fda6"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep)</td></tr>
-<tr class="separator:a151b1e045efb32a0a5c0a9fdc8c6fda6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9d2b7c0744a8cae13fa5315aab5be1e7"><td class="memItemLeft" align="right" valign="top"><a id="a9d2b7c0744a8cae13fa5315aab5be1e7"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep, int depth)</td></tr>
-<tr class="separator:a9d2b7c0744a8cae13fa5315aab5be1e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a18291398b916a91c56f6630b11e84c25"><td class="memItemLeft" align="right" valign="top"><a id="a18291398b916a91c56f6630b11e84c25"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep, int depth)</td></tr>
-<tr class="separator:a18291398b916a91c56f6630b11e84c25"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a32e554249c2f344ebf531bad3a3037b5"><td class="memItemLeft" align="right" valign="top"><a id="a32e554249c2f344ebf531bad3a3037b5"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep, unsigned depth)</td></tr>
-<tr class="separator:a32e554249c2f344ebf531bad3a3037b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1ae5b12418188d42254edbd626e557f4"><td class="memItemLeft" align="right" valign="top"><a id="a1ae5b12418188d42254edbd626e557f4"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep, unsigned depth)</td></tr>
-<tr class="separator:a1ae5b12418188d42254edbd626e557f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af27f9646c46faa08213e959390ee92e3"><td class="memItemLeft" align="right" valign="top"><a id="af27f9646c46faa08213e959390ee92e3"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasActiveEdges</b> (const <a class="el" href="classpoly_1_1poly_1_1Dependencies.html">IR::Dependencies</a> &amp;dep, unsigned depth) const -&gt; bool</td></tr>
-<tr class="separator:af27f9646c46faa08213e959390ee92e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4773e4b816f1964948f257e7d37595fe"><td class="memItemLeft" align="right" valign="top"><a id="a4773e4b816f1964948f257e7d37595fe"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep)</td></tr>
+<tr class="separator:a4773e4b816f1964948f257e7d37595fe"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a61e302844f26dc8584740009d6e9171c"><td class="memItemLeft" align="right" valign="top"><a id="a61e302844f26dc8584740009d6e9171c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep)</td></tr>
+<tr class="separator:a61e302844f26dc8584740009d6e9171c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ac015d56ca85ddd61507a0c1e99031c"><td class="memItemLeft" align="right" valign="top"><a id="a5ac015d56ca85ddd61507a0c1e99031c"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIds</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep) const</td></tr>
+<tr class="separator:a5ac015d56ca85ddd61507a0c1e99031c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9700957c9bd01a4b1b0e2da0fc3bc5fd"><td class="memItemLeft" align="right" valign="top"><a id="a9700957c9bd01a4b1b0e2da0fc3bc5fd"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIds</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep) const</td></tr>
+<tr class="separator:a9700957c9bd01a4b1b0e2da0fc3bc5fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed964778bf7eab41d59498db84f483ff"><td class="memItemLeft" align="right" valign="top"><a id="aed964778bf7eab41d59498db84f483ff"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdgeIds</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, int depth) const</td></tr>
+<tr class="separator:aed964778bf7eab41d59498db84f483ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7181a97e038d52780995f288f269b2b9"><td class="memItemLeft" align="right" valign="top"><a id="a7181a97e038d52780995f288f269b2b9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdgeIds</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> dep, int depth) const</td></tr>
+<tr class="separator:a7181a97e038d52780995f288f269b2b9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afb6f9c6bfa2bed2b28b6e77d0822a35a"><td class="memItemLeft" align="right" valign="top"><a id="afb6f9c6bfa2bed2b28b6e77d0822a35a"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep)</td></tr>
+<tr class="separator:afb6f9c6bfa2bed2b28b6e77d0822a35a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa3dd20f3d503149987bbae992c9b7562"><td class="memItemLeft" align="right" valign="top"><a id="aa3dd20f3d503149987bbae992c9b7562"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep)</td></tr>
+<tr class="separator:aa3dd20f3d503149987bbae992c9b7562"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4bdfe60bde28fe6825214c3da3174865"><td class="memItemLeft" align="right" valign="top"><a id="a4bdfe60bde28fe6825214c3da3174865"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inputEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, int depth0)</td></tr>
+<tr class="separator:a4bdfe60bde28fe6825214c3da3174865"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acea4f029d903553e6df1274c3cc65f43"><td class="memItemLeft" align="right" valign="top"><a id="acea4f029d903553e6df1274c3cc65f43"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outputEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, int depth0)</td></tr>
+<tr class="separator:acea4f029d903553e6df1274c3cc65f43"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2f2d77b2c4f8a79d6a65d501c89c162"><td class="memItemLeft" align="right" valign="top"><a id="ab2f2d77b2c4f8a79d6a65d501c89c162"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>outNeighbors</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, unsigned depth)</td></tr>
+<tr class="separator:ab2f2d77b2c4f8a79d6a65d501c89c162"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac6329e44f087147fd9a12cec07ad7cc9"><td class="memItemLeft" align="right" valign="top"><a id="ac6329e44f087147fd9a12cec07ad7cc9"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>inNeighbors</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, unsigned depth)</td></tr>
+<tr class="separator:ac6329e44f087147fd9a12cec07ad7cc9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac24d9477daf706b42241905a5655653d"><td class="memItemLeft" align="right" valign="top"><a id="ac24d9477daf706b42241905a5655653d"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasActiveInEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, int depth0) const -&gt; bool</td></tr>
+<tr class="separator:ac24d9477daf706b42241905a5655653d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fa2abc8fde1b3707415582d24e49210"><td class="memItemLeft" align="right" valign="top"><a id="a6fa2abc8fde1b3707415582d24e49210"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasActiveOutEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, int depth0) const -&gt; bool</td></tr>
+<tr class="separator:a6fa2abc8fde1b3707415582d24e49210"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a811546c8cb16e4e6dbb10cbbabdac072"><td class="memItemLeft" align="right" valign="top"><a id="a811546c8cb16e4e6dbb10cbbabdac072"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>hasActiveEdges</b> (<a class="el" href="classpoly_1_1poly_1_1Dependencies.html">poly::Dependencies</a> &amp;dep, int depth0) const -&gt; bool</td></tr>
+<tr class="separator:a811546c8cb16e4e6dbb10cbbabdac072"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba2233530574b7af339f69c90a3dbb7e"><td class="memItemLeft" align="right" valign="top"><a id="aba2233530574b7af339f69c90a3dbb7e"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getSchedule</b> () -&gt; <a class="el" href="structpoly_1_1poly_1_1AffineSchedule.html">poly::AffineSchedule</a></td></tr>
 <tr class="separator:aba2233530574b7af339f69c90a3dbb7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -236,15 +244,15 @@ constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getOffset</
 <tr class="memitem:ad63d6d4efcd694f98737c145e7f18a7d"><td class="memItemLeft" align="right" valign="top"><a id="ad63d6d4efcd694f98737c145e7f18a7d"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getNumLoops</b> () const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:ad63d6d4efcd694f98737c145e7f18a7d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9c955d8a0f1b30f6ec1099a2abf76627"><td class="memItemLeft" align="right" valign="top"><a id="a9c955d8a0f1b30f6ec1099a2abf76627"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>phiIsScheduled</b> (unsigned d) const -&gt; bool</td></tr>
-<tr class="separator:a9c955d8a0f1b30f6ec1099a2abf76627"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af94564c8a8227fa989027a5e5f172d9e"><td class="memItemLeft" align="right" valign="top"><a id="af94564c8a8227fa989027a5e5f172d9e"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updatePhiOffset</b> (unsigned p) -&gt; unsigned</td></tr>
-<tr class="separator:af94564c8a8227fa989027a5e5f172d9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a049ef5f21d4d1ae15ce67a772f31de2c"><td class="memItemLeft" align="right" valign="top"><a id="a049ef5f21d4d1ae15ce67a772f31de2c"></a>
-constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updateOmegaOffset</b> (unsigned o) -&gt; unsigned</td></tr>
-<tr class="separator:a049ef5f21d4d1ae15ce67a772f31de2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69cbd7b98de8b05c8cc22f480c1de2f2"><td class="memItemLeft" align="right" valign="top"><a id="a69cbd7b98de8b05c8cc22f480c1de2f2"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>phiIsScheduled</b> (int d) const -&gt; bool</td></tr>
+<tr class="separator:a69cbd7b98de8b05c8cc22f480c1de2f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac206cac8cdb169640c99f5fb55308df7"><td class="memItemLeft" align="right" valign="top"><a id="ac206cac8cdb169640c99f5fb55308df7"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updatePhiOffset</b> (int p) -&gt; int</td></tr>
+<tr class="separator:ac206cac8cdb169640c99f5fb55308df7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8a1a5a7ee561bb85fe7c4a4c3d66d00"><td class="memItemLeft" align="right" valign="top"><a id="ac8a1a5a7ee561bb85fe7c4a4c3d66d00"></a>
+constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>updateOmegaOffset</b> (int o) -&gt; int</td></tr>
+<tr class="separator:ac8a1a5a7ee561bb85fe7c4a4c3d66d00"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36b99dbb9a0c3695afbd47279f9094c6"><td class="memItemLeft" align="right" valign="top"><a id="a36b99dbb9a0c3695afbd47279f9094c6"></a>
 constexpr auto&#160;</td><td class="memItemRight" valign="bottom"><b>getPhiOffset</b> () const -&gt; ptrdiff_t</td></tr>
 <tr class="separator:a36b99dbb9a0c3695afbd47279f9094c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -314,12 +322,13 @@ static auto&#160;</td><td class="memItemRight" valign="bottom"><b>construct</b> 
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
-<tr class="memitem:a71c8af4b82ff2495626a5e0ac121f2fb"><td class="memItemLeft" align="right" valign="top"><a id="a71c8af4b82ff2495626a5e0ac121f2fb"></a>
-auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (llvm::raw_ostream &amp;os, const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> &amp;node) -&gt; llvm::raw_ostream &amp;</td></tr>
-<tr class="separator:a71c8af4b82ff2495626a5e0ac121f2fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19930e3a52870ee91824bf409aefb969"><td class="memItemLeft" align="right" valign="top"><a id="a19930e3a52870ee91824bf409aefb969"></a>
+auto&#160;</td><td class="memItemRight" valign="bottom"><b>operator&lt;&lt;</b> (std::ostream &amp;os, const <a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> &amp;node) -&gt; std::ostream &amp;</td></tr>
+<tr class="separator:a19930e3a52870ee91824bf409aefb969"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p><a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; When splitting <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> graphs, these graphs will have edges between them that we drop. This is only a problem if we merge graphs later. </p>
+<div class="textblock"><p><a class="el" href="classpoly_1_1lp_1_1ScheduledNode.html">ScheduledNode</a> Represents a set of memory accesses that are optimized together in the LP. These instructions are all connected directly by through registers. E.g., <code>A[i] = B[i] + C[i]</code> is a single node because we load from <code>B[i]</code> and <code>C[i]</code> into registers, compute, and <code>A[i]</code>; When splitting <a class="el" href="classpoly_1_1lp_1_1LoopBlock.html">LoopBlock</a> graphs, these graphs will have edges between them that we drop. This is only a problem if we merge graphs later.</p>
+<p>Addr chains here are formed using <code>next</code> </p>
 </div><h2 class="groupheader">Member Function Documentation</h2>
 <a id="a0dca20e729df1a3fcd6080fd80176061"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0dca20e729df1a3fcd6080fd80176061">&#9670;&nbsp;</a></span>fuse()</h2>

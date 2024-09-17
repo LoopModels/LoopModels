@@ -1,11 +1,6 @@
 var searchData=
 [
-  ['id_245',['ID',['../structpoly_1_1poly_1_1Dependence_1_1ID.html',1,'poly::poly::Dependence']]],
-  ['identifier_246',['Identifier',['../structpoly_1_1IR_1_1Cnst_1_1Identifier.html',1,'poly::IR::Cnst::Identifier'],['../structpoly_1_1IR_1_1Instruction_1_1Identifier.html',1,'poly::IR::Instruction::Identifier']]],
-  ['inlinetrie_247',['InlineTrie',['../structpoly_1_1dict_1_1InlineTrie.html',1,'poly::dict']]],
-  ['innode_248',['InNode',['../structpoly_1_1lp_1_1ScheduledNode_1_1InNode.html',1,'poly::lp::ScheduledNode']]],
-  ['instbyvalue_249',['InstByValue',['../structpoly_1_1IR_1_1InstByValue.html',1,'poly::IR']]],
-  ['instruction_250',['Instruction',['../classpoly_1_1IR_1_1Instruction.html',1,'poly::IR']]],
-  ['intersection_251',['Intersection',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html',1,'poly::IR::Predicate']]],
-  ['iroptimizer_252',['IROptimizer',['../classpoly_1_1CostModeling_1_1IROptimizer.html',1,'poly::CostModeling']]]
+  ['hash_3c_20poly_3a_3air_3a_3ainstbyvalue_20_3e_266',['hash&lt; poly::IR::InstByValue &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1InstByValue_01_4.html',1,'ankerl::unordered_dense']]],
+  ['hash_3c_20poly_3a_3air_3a_3ainstruction_3a_3aidentifier_20_3e_267',['hash&lt; poly::IR::Instruction::Identifier &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1Instruction_1_1Identifier_01_4.html',1,'ankerl::unordered_dense']]],
+  ['hash_3c_20poly_3a_3air_3a_3aloopinvariant_3a_3aidentifier_20_3e_268',['hash&lt; poly::IR::LoopInvariant::Identifier &gt;',['../structankerl_1_1unordered__dense_1_1hash_3_01poly_1_1IR_1_1LoopInvariant_1_1Identifier_01_4.html',1,'ankerl::unordered_dense']]]
 ];

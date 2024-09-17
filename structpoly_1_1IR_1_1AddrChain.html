@@ -74,6 +74,8 @@ $(function() {
 <div class="title">poly::IR::AddrChain Struct Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
+
+<p><code>#include &lt;<a class="el" href="TreeResult_8hpp_source.html">TreeResult.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -98,7 +100,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a6cdfc5708bd48ed38b1b8b151b272dbb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structpoly_1_1IR_1_1AddrChain.html#a6cdfc5708bd48ed38b1b8b151b272dbb">addr</a> {nullptr}</td></tr>
 <tr class="separator:a6cdfc5708bd48ed38b1b8b151b272dbb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Member Data Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Uses <code>origNext</code> to create a chain <code>child</code> and <code>parent</code> are used for jumping first/last stow </p>
+</div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="a6cdfc5708bd48ed38b1b8b151b272dbb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6cdfc5708bd48ed38b1b8b151b272dbb">&#9670;&nbsp;</a></span>addr</h2>
 
@@ -110,12 +114,13 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
-<p><code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s, sorted <code>[stow..., load...]</code> stow's getChild() points to last stow load's getChild() points to last load </p>
+<p><code><a class="el" href="classpoly_1_1IR_1_1Addr.html">Addr</a></code>s, sorted <code>[stow..., load...]</code> stow's <code>getChild()</code> points to last stow load's <code>getChild()</code> points to last load</p>
+<p>Alternatively, we could consider: stow's <code>getChild()</code> points to last stow or <code>nullptr</code> load's <code>getChild()</code> points to last load or <code>nullptr</code> <code>nullptr</code> refers to self Using <code>nullptr</code> instead of referring to self requires an extra check, but it makes debugging easier as we can avoid ever storing cycles. </p>
 
 </div>
 </div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
-<li>include/IR/<a class="el" href="Cache_8hpp_source.html">Cache.hpp</a></li>
+<li>include/IR/<a class="el" href="TreeResult_8hpp_source.html">TreeResult.hpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

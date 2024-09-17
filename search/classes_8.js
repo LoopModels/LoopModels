@@ -1,15 +1,13 @@
 var searchData=
 [
-  ['legality_253',['Legality',['../classpoly_1_1CostModeling_1_1Legality.html',1,'poly::CostModeling']]],
-  ['linearsymboliccomparator_254',['LinearSymbolicComparator',['../structpoly_1_1comparator_1_1LinearSymbolicComparator.html',1,'poly::comparator']]],
-  ['literalcomparator_255',['LiteralComparator',['../structpoly_1_1comparator_1_1LiteralComparator.html',1,'poly::comparator']]],
-  ['load_256',['Load',['../classpoly_1_1IR_1_1Load.html',1,'poly::IR']]],
-  ['loop_257',['Loop',['../classpoly_1_1IR_1_1Loop.html',1,'poly::IR::Loop'],['../classpoly_1_1poly_1_1Loop.html',1,'poly::poly::Loop']]],
-  ['loopblock_258',['LoopBlock',['../classpoly_1_1lp_1_1LoopBlock.html',1,'poly::lp']]],
-  ['loopcostcounts_259',['LoopCostCounts',['../structpoly_1_1CostModeling_1_1LoopCostCounts.html',1,'poly::CostModeling']]],
-  ['loopdepsatisfaction_260',['LoopDepSatisfaction',['../structpoly_1_1CostModeling_1_1LoopDepSatisfaction.html',1,'poly::CostModeling']]],
-  ['loopdepsummary_261',['LoopDepSummary',['../structpoly_1_1CostModeling_1_1LoopDepSummary.html',1,'poly::CostModeling']]],
-  ['loopindependent_262',['LoopIndependent',['../structpoly_1_1CostModeling_1_1LoopIndependent.html',1,'poly::CostModeling']]],
-  ['looptree_263',['LoopTree',['../classpoly_1_1CostModeling_1_1LoopTree.html',1,'poly::CostModeling']]],
-  ['looptreecostfn_264',['LoopTreeCostFn',['../classpoly_1_1CostModeling_1_1LoopTreeCostFn.html',1,'poly::CostModeling']]]
+  ['identifier_269',['Identifier',['../structpoly_1_1IR_1_1Instruction_1_1Identifier.html',1,'poly::IR::Instruction::Identifier'],['../structpoly_1_1IR_1_1LoopInvariant_1_1Identifier.html',1,'poly::IR::LoopInvariant::Identifier']]],
+  ['indexrelationgraph_270',['IndexRelationGraph',['../structpoly_1_1utils_1_1IndexRelationGraph.html',1,'poly::utils']]],
+  ['inlinetrie_271',['InlineTrie',['../structpoly_1_1dict_1_1InlineTrie.html',1,'poly::dict']]],
+  ['innode_272',['InNode',['../structpoly_1_1lp_1_1ScheduledNode_1_1InNode.html',1,'poly::lp::ScheduledNode']]],
+  ['instbyvalue_273',['InstByValue',['../structpoly_1_1IR_1_1InstByValue.html',1,'poly::IR']]],
+  ['instruction_274',['Instruction',['../classpoly_1_1IR_1_1Instruction.html',1,'poly::IR']]],
+  ['intersection_275',['Intersection',['../structpoly_1_1IR_1_1Predicate_1_1Intersection.html',1,'poly::IR::Predicate']]],
+  ['iroptimizer_276',['IROptimizer',['../classpoly_1_1CostModeling_1_1IROptimizer.html',1,'poly::CostModeling']]],
+  ['isidactive_277',['IsIdActive',['../structpoly_1_1lp_1_1ScheduledNode_1_1IsIdActive.html',1,'poly::lp::ScheduledNode']]],
+  ['iterator_278',['Iterator',['../structpoly_1_1utils_1_1LoopPermutation_1_1Iterator.html',1,'poly::utils::LoopPermutation::Iterator'],['../structpoly_1_1utils_1_1LoopPermutations_1_1Iterator.html',1,'poly::utils::LoopPermutations::Iterator']]]
 ];
