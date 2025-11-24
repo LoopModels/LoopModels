@@ -5,7 +5,7 @@ jobs:
   linux:
     runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - run: |
         sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
         sudo wget https://apt.llvm.org/llvm.sh
@@ -34,7 +34,7 @@ jobs:
   # macos:
   #   runs-on: macos-latest
   #   steps:
-  #   - uses: actions/checkout@v5
+  #   - uses: actions/checkout@v6
   #   - run: sudo xcode-select --switch /Library/Developer/CommandLineTools
   #   - run: echo $(pkgutil --pkg-info=com.apple.pkg.CLTools_Executables)
   #   - run: brew install llvm@18 ninja pkg-config cmake gcovr # gcc
