@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=latex 2025.8.25)  25 AUG 2025 19:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=latex 2025.11.24)  24 NOV 2025 08:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -84,7 +84,7 @@ l.7   \makeatletter
  
 Here is how much of TeX's memory you used:
  1258 strings out of 476183
- 18002 string characters out of 5795621
+ 18002 string characters out of 5795620
  1922972 words of memory out of 5000000
  23311 multiletter control sequences out of 15000+600000
  558069 words of font info for 36 fonts, out of 8000000 for 9000
